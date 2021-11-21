@@ -1,0 +1,106 @@
+* {
+	--color-background: #eee;
+	--color-background2: #ddd;
+	--color-background-hover: #ccc;
+	--color-foreground: black;
+	--color-link: #00e;
+	--color-link-active: #e00;
+	--color-error: #a00;
+}
+
+@media (prefers-color-scheme: dark) {
+	* {
+		--color-background: #333;
+		--color-background2: #444;
+		--color-background-hover: #555;
+		--color-foreground: #ddd;
+		--color-link: #99f;
+		--color-link-active: #f99;
+		--color-error: #f66;
+	}
+}
+
+html,
+select {
+	background-color: var(--color-background);
+	color: var(--color-foreground);
+}
+:link {
+	color: var(--color-link);
+}
+:link:active {
+	color: var(--color-link-active);
+}
+
+table.data {
+	border-collapse: collapse;
+}
+
+table.data th,
+table.data td {
+	border: 1px solid black;
+	padding: 3px 5px;
+}
+
+table.data tr:nth-child(even) {
+	background-color: var(--color-background2);
+}
+
+table.data tr:hover {
+	background-color: var(--color-background-hover);
+}
+
+table.data .nodata {
+	text-align: center;
+}
+
+.addBottomMargin {
+	margin-bottom: 20px;
+}
+
+ul.horizontal {
+	list-style: none;
+}
+
+ul.fastlinks {
+	list-style: none;
+}
+ul.fastlinks li {
+	display: inline-block;
+	margin: 0;
+	font-family: monospace;
+	padding: 0 2px;
+}
+
+.entryType {
+	display: inline-block;
+	padding: 0 3px;
+	cursor: help;
+	font-weight: bold;
+}
+
+.import-new label,
+.import-new .button {
+	display: block;
+	padding: 5px;
+}
+.import-new label > * {
+	display: block;
+}
+
+.pre {
+	white-space: pre-wrap;
+}
+.result p,
+.result pre {
+	border: 1px solid black;
+	padding: 10px;
+}
+.result pre {
+	background-color: var(--color-background2);
+}
+.result .error {
+	padding: 10px;
+	font-weight: bold;
+	color: var(--color-error);
+}
