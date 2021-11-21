@@ -142,7 +142,7 @@ class GTFSFileOptions
 	}
 	public function isMandatoryField(string $field) : bool
 	{
-		return in_array($field, $this->mandatoryFields);
+		return in_array($field, $this->getMandatoryFields());
 	}
 	public function markMandatoryFieldAsFound(string $field) : bool
 	{
@@ -165,7 +165,7 @@ class GTFSFileOptions
 	}
 	public function isOptionalField(string $field) : bool
 	{
-		return isset($this->optionalFields[$field]);
+		return in_array($field, $this->getOptionalFields());
 	}
 	public function markOptionalFieldAsFound(string $field) : bool
 	{

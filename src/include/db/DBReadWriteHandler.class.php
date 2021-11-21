@@ -96,7 +96,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$this->execute($sql, $params);
 	}
 	
-	public function cleanupTable(string $tableName, int $datasetId, array $references, int $chunkedDelete = 0, bool $useOR = false, bool $bigTable = false) : int
+	public function cleanupTable(string $tableName, int $datasetId, string $reason, array $references, bool $useOR = false) : int
 	{
 		if(empty($references))
 		{
@@ -107,7 +107,13 @@ class DBReadWriteHandler extends DBReadHandler
 		
 		foreach($references as $ref)
 		{
-			$conditionParts[] = "NOT EXISTS (SELECT 1 FROM `".$ref[1]."` a WHERE a.dataset_id = :datasetId AND a.`".$ref[2]."` = `".$tableName."`.`".$ref[0]."` LIMIT 1)";
+			$conditionParts[] = "NOT EXISTS (
+					SELECT 1 FROM `".$this->getImportTableName($ref[1])."` a
+					WHERE a.dataset_id = :datasetId
+					AND a.`".self::EXCLUSION_COLUMN_NAME."` IS NULL
+					AND a.`".$ref[2]."` = `".$this->getImportTableName($tableName)."`.`".$ref[0]."`
+					LIMIT 1
+				)";
 		}
 		
 		$glue = " AND ";
@@ -117,11 +123,7 @@ class DBReadWriteHandler extends DBReadHandler
 		}
 		$condition = join($glue, $conditionParts);
 		
-		if($bigTable)
-		{
-			return $this->deleteBigData($tableName, $datasetId, $condition);
-		}
-		return $this->deleteData($tableName, $datasetId, $condition, [], $chunkedDelete);
+		return $this->exclude($tableName, $datasetId, $reason, $condition, []);
 	}
 	
 	public function deleteData(string $tableName, int $datasetId, string $condition = "1=1", array $params = [], int $chunkedDelete = 0) : int
@@ -183,9 +185,9 @@ class DBReadWriteHandler extends DBReadHandler
 		
 		$params[":datasetId"] = $datasetId;
 		$params[":reason"] = $reason;
-		$sql = "UPDATE TABLE `$importTableName`
+		$sql = "UPDATE `$importTableName`
 				SET `".self::EXCLUSION_COLUMN_NAME."` = :reason
-				WHERE dataset_id = :datasetId
+				WHERE `dataset_id` = :datasetId
 				AND $condition";
 		
 		$this->logQuery($sql, $params);
@@ -196,9 +198,13 @@ class DBReadWriteHandler extends DBReadHandler
 	public function copyFromImportTable(string $tableName, array $columns = []) : int
 	{
 		$importTableName = $this->getImportTableName($tableName);
-		$sql = "INSERT INTO TABLE `$tableName` SELECT `".join("`, `", $columns)."` FROM `$importTableName` WHERE `".self::EXCLUSION_COLUMN_NAME."` IS NULL";
-		$this->logQuery($sql, $params);
-		$rowCount = $this->execute($sql, $params);
+		$columns[] = "dataset_id";
+		$sql = "INSERT INTO `$tableName` (`".join("`, `", $columns)."`)
+				SELECT `".join("`, `", $columns)."`
+				FROM `$importTableName`
+				WHERE `".self::EXCLUSION_COLUMN_NAME."` IS NULL";
+		$this->logQuery($sql);
+		$rowCount = $this->execute($sql);
 		return $rowCount;
 	}
 	
@@ -209,12 +215,12 @@ class DBReadWriteHandler extends DBReadHandler
 			throw new DBException("Datenbankfehler: datasetId negativ.");
 		}
 		$sql = "
-			UPDATE stops s
+			UPDATE ".$this->getImportTableName("stops")." s
 			SET s.is_parent = '1'
 			WHERE s.dataset_id = :datasetId
 			AND EXISTS (
 				SELECT s2.stop_id
-				FROM stops s2
+				FROM ".$this->getImportTableName("stops")." s2
 				WHERE s2.dataset_id = s.dataset_id
 				AND s2.parent_station = s.stop_id
 			)";
@@ -234,18 +240,18 @@ class DBReadWriteHandler extends DBReadHandler
 			UPDATE datasets s
 			SET s.start_date = LEAST(
 				IFNULL((
-					SELECT MIN(start_date) FROM calendar c WHERE c.dataset_id = :datasetId
+					SELECT MIN(start_date) FROM ".$this->getImportTableName("calendar")." c WHERE c.dataset_id = :datasetId
 				), :maxDate),
 				IFNULL((
-					SELECT MIN(date) FROM calendar_dates c WHERE c.dataset_id = :datasetId
+					SELECT MIN(date) FROM ".$this->getImportTableName("calendar_dates")." c WHERE c.dataset_id = :datasetId
 				), :maxDate)
 			),
 			s.end_date = GREATEST(
 				IFNULL((
-					SELECT MAX(end_date) FROM calendar c WHERE c.dataset_id = :datasetId
+					SELECT MAX(end_date) FROM ".$this->getImportTableName("calendar")." c WHERE c.dataset_id = :datasetId
 				), :minDate),
 				IFNULL((
-					SELECT MAX(date) FROM calendar_dates c WHERE c.dataset_id = :datasetId
+					SELECT MAX(date) FROM ".$this->getImportTableName("calendar_dates")." c WHERE c.dataset_id = :datasetId
 				), :minDate)
 			)
 			WHERE s.dataset_id = :datasetId";

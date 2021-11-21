@@ -13,6 +13,12 @@ class GTFSImporter extends ZipImporter
 		parent::__construct($db, $importPath, $cachePath, $logPath);
 	}
 	
+	public function setDatasetId(int $datasetId) : GTFSImporter
+	{
+		$this->datasetId = $datasetId;
+		return $this;
+	}
+	
 	public static function getImportType() : string
 	{
 		return "GTFS";
@@ -57,7 +63,7 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 	
-	public function removeRouteTypeClasses(array $routeTypeClass) : GTFSImporter
+	public function removeRouteTypeClasses(array $routeTypeClasses) : GTFSImporter
 	{
 		if(!$this->isRunning())
 		{
@@ -68,7 +74,7 @@ class GTFSImporter extends ZipImporter
 			$this->abort("Falsche Reihenfolge, kein Dataset angelegt.");
 		}
 		
-		foreach($routeTypeClass as $class)
+		foreach($routeTypeClasses as $class)
 		{
 			if(!GTFSConstants::isRouteTypeClass($class, GTFSConstants::ROUTE_TYPE_CLASSES))
 			{
@@ -85,7 +91,7 @@ class GTFSImporter extends ZipImporter
 					$params = [
 						":routeType" => $routeTypeId,
 					];
-					$count = $this->db->deleteData("routes", $this->datasetId, $condition, $params);
+					$count = $this->db->exclude("routes", $this->datasetId, "Exclusion by route type class ".$class, $condition, $params);
 					$this->log("$count Routen gelöscht.");
 				}
 			}
@@ -151,42 +157,40 @@ class GTFSImporter extends ZipImporter
 		
 		try
 		{
-			$batchSize = 1e4;
-			
 			$this->log("Lösche ungültige routes...");
-			$count = $this->db->cleanupTable("routes", $this->datasetId, [["agency_id", "agency", "agency_id"]], $batchSize);
+			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup", [["agency_id", "agency", "agency_id"]]);
 			$this->log("$count ungültige routes gelöscht.");
 			
 			$this->log("Lösche ungültige trips...");
-			$count = $this->db->cleanupTable("trips", $this->datasetId, [["route_id", "routes", "route_id"]], $batchSize);
+			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup", [["route_id", "routes", "route_id"]]);
 			$this->log("$count ungültige trips gelöscht.");
 			
 			$this->log("Lösche ungültige stop_times...");
-			$count = $this->db->cleanupTable("stop_times", $this->datasetId, [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], $batchSize, true);
+			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup", [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], true);
 			$this->log("$count gültige stop_times behalten.");
 			
 			$this->log("Lösche unbenutzte stops...");
-			$count = $this->db->cleanupTable("stops", $this->datasetId, [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]], $batchSize);
+			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
 			$this->log("$count unbenutzte stops gelöscht.");
 			
 			$this->log("Lösche unbenutzte trips...");
-			$count = $this->db->cleanupTable("trips", $this->datasetId, [["trip_id", "stop_times", "trip_id"]], $batchSize);
+			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup reverse", [["trip_id", "stop_times", "trip_id"]]);
 			$this->log("$count unbenutzte trips gelöscht.");
 			
 			$this->log("Lösche unbenutzte routes...");
-			$count = $this->db->cleanupTable("routes", $this->datasetId, [["route_id", "trips", "route_id"]], $batchSize);
+			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup reverse", [["route_id", "trips", "route_id"]]);
 			$this->log("$count unbenutzte routes gelöscht.");
 			
 			$this->log("Lösche unbenutzte Kalenderdaten...");
-			$count = $this->db->cleanupTable("calendar", $this->datasetId, [["service_id", "trips", "service_id"]], $batchSize);
+			$count = $this->db->cleanupTable("calendar", $this->datasetId, "calendar cleanup reverse", [["service_id", "trips", "service_id"]]);
 			$this->log("$count unbenutzte agencies gelöscht.");
 			
 			$this->log("Lösche unbenutzte Kalenderausnahmen...");
-			$count = $this->db->cleanupTable("calendar_dates", $this->datasetId, [["service_id", "trips", "service_id"]], $batchSize);
+			$count = $this->db->cleanupTable("calendar_dates", $this->datasetId, "calendar_dates cleanup reverse", [["service_id", "trips", "service_id"]]);
 			$this->log("$count unbenutzte Kalenderausnahmen gelöscht.");
 			
 			$this->log("Lösche unbenutzte agencies...");
-			$count = $this->db->cleanupTable("agency", $this->datasetId, [["agency_id", "routes", "agency_id"]]);
+			$count = $this->db->cleanupTable("agency", $this->datasetId, "agencies cleanup reverse", [["agency_id", "routes", "agency_id"]]);
 			$this->log("$count unbenutzte agencies gelöscht.");
 		}
 		catch(DBException $e)
@@ -197,9 +201,50 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 	
-	public function setDatasetId(int $datasetId)
+	public function copyImportData(?array $files = null) : GTFSImporter
 	{
-		$this->datasetId = $datasetId;
+		if(!$this->isRunning())
+		{
+			return $this;
+		}
+		if($this->datasetId === null)
+		{
+			$this->abort("Falsche Reihenfolge, kein Dataset angelegt.");
+		}
+		
+		if($files === null)
+		{
+			$files = self::GTFS_FILES;
+		}
+		
+		foreach($files as $file)
+		{
+			$fileOptions = GTFSFiles::getFileOptions($file);
+			if(!$this->doesFileExist($file))
+			{
+				continue;
+			}
+			
+			try
+			{
+				$tableName = $fileOptions->getTableName();
+				$columns = array_merge($fileOptions->getMandatoryFields(), $fileOptions->getOptionalFields());
+				
+				$importCount = $this->db->getTableCount($this->db->getImportTableName($tableName), $this->datasetId);
+				
+				$this->log("Übernehme $tableName...");
+				$count = $this->db->copyFromImportTable($tableName, $columns);
+				$this->log("$count von $importCount Einträgen aus $tableName übernommen.");
+			}
+			catch(DBException $e)
+			{
+				$this->abort("Datenbankfehler beim Übernehmen der Daten.", $e);
+			}
+			
+			$this->importLoadFile($fileOptions);
+		}
+		
+		return $this;
 	}
 	
 	protected function importLoadFile(GTFSFileOptions $fileOptions) : void
@@ -244,6 +289,7 @@ class GTFSImporter extends ZipImporter
 			}
 			else
 			{
+				$this->log("$fileName enthält unbekannte Spalte $field, wird ignoriert.");
 				$columns[] = "@ignore".$i;
 			}
 		}

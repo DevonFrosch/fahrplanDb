@@ -19,18 +19,10 @@ function import(GTFSImporter $importer, string $datasetName, string $license, ?s
 	$importer->addDataset(trim($_POST["name"]), $license, $referenceDate, $desc);
 	$importer->extractZipFile($file);
 	$importer->importFiles();
-	runDataCleanup($importer);
-	$importer->finish(true);
-}
-
-function runDataCleanup(GTFSImporter $importer) : void
-{
-	set_time_limit(30);
 	$importer->removeRouteTypeClasses([GTFSConstants::ROUTE_TYPE_CLASS_BUS, GTFSConstants::ROUTE_TYPE_CLASS_OTHER]);
-	set_time_limit(30);
 	$importer->removeUnusedData();
-	set_time_limit(30);
 	$importer->markParentStops();
 	$importer->setDatasetDates();
+	$importer->copyImportData();
 	$importer->finish(true);
 }
