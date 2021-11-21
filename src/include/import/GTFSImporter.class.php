@@ -47,6 +47,8 @@ class GTFSImporter extends ZipImporter
 		foreach($files as $file)
 		{
 			$fileOptions = GTFSFiles::getFileOptions($file);
+			$this->db->createImportTable($fileOptions->getTableName());
+
 			if(!$this->doesFileExist($file))
 			{
 				if(!$fileOptions->isOptional())
@@ -304,8 +306,7 @@ class GTFSImporter extends ZipImporter
 		{
 			$filePath = realpath($this->getFilePath($fileName));
 			$eol = $this->detectEOL($filePath);
-
-			$importTableName = $this->db->createImportTable($fileOptions->getTableName());
+			$importTableName = $this->db->getImportTableName($fileOptions->getTableName());
 			$this->db->loadData($filePath, $eol, $importTableName, $columns, $sets, $params);
 		}
 		catch(DBException $e)
