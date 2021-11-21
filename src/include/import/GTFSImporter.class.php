@@ -80,7 +80,7 @@ class GTFSImporter extends ZipImporter
 		{
 			if(!GTFSConstants::isRouteTypeClass($class, GTFSConstants::ROUTE_TYPE_CLASSES))
 			{
-				$this->abort("Falsche Klasse angegeben, nichts gelöscht");
+				$this->abort("Falsche Klasse angegeben, nichts markiert");
 			}
 			$routeTypes = GTFSConstants::getRouteTypesByClass($class);
 
@@ -93,8 +93,8 @@ class GTFSImporter extends ZipImporter
 					$params = [
 						":routeType" => $routeTypeId,
 					];
-					$count = $this->db->exclude("routes", $this->datasetId, "Exclusion by route type class ".$class, $condition, $params);
-					$this->log("$count Routen gelöscht.");
+					$count = $this->db->exclude("routes", $this->datasetId, "route type class ".$class, $condition, $params);
+					$this->log("$count Routen markiert.");
 				}
 			}
 			catch(DBException $e)
@@ -161,11 +161,11 @@ class GTFSImporter extends ZipImporter
 		{
 			$this->log("Lösche ungültige routes...");
 			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup", [["agency_id", "agency", "agency_id"]]);
-			$this->log("$count ungültige routes gelöscht.");
+			$this->log("$count ungültige routes markiert.");
 
 			$this->log("Lösche ungültige trips...");
 			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup", [["route_id", "routes", "route_id"]]);
-			$this->log("$count ungültige trips gelöscht.");
+			$this->log("$count ungültige trips markiert.");
 
 			$this->log("Lösche ungültige stop_times...");
 			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup", [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], true);
@@ -173,27 +173,27 @@ class GTFSImporter extends ZipImporter
 
 			$this->log("Lösche unbenutzte stops...");
 			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
-			$this->log("$count unbenutzte stops gelöscht.");
+			$this->log("$count unbenutzte stops markiert.");
 
 			$this->log("Lösche unbenutzte trips...");
 			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup reverse", [["trip_id", "stop_times", "trip_id"]]);
-			$this->log("$count unbenutzte trips gelöscht.");
+			$this->log("$count unbenutzte trips markiert.");
 
 			$this->log("Lösche unbenutzte routes...");
 			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup reverse", [["route_id", "trips", "route_id"]]);
-			$this->log("$count unbenutzte routes gelöscht.");
+			$this->log("$count unbenutzte routes markiert.");
 
 			$this->log("Lösche unbenutzte Kalenderdaten...");
 			$count = $this->db->cleanupTable("calendar", $this->datasetId, "calendar cleanup reverse", [["service_id", "trips", "service_id"]]);
-			$this->log("$count unbenutzte agencies gelöscht.");
+			$this->log("$count unbenutzte agencies markiert.");
 
 			$this->log("Lösche unbenutzte Kalenderausnahmen...");
 			$count = $this->db->cleanupTable("calendar_dates", $this->datasetId, "calendar_dates cleanup reverse", [["service_id", "trips", "service_id"]]);
-			$this->log("$count unbenutzte Kalenderausnahmen gelöscht.");
+			$this->log("$count unbenutzte Kalenderausnahmen markiert.");
 
 			$this->log("Lösche unbenutzte agencies...");
 			$count = $this->db->cleanupTable("agency", $this->datasetId, "agencies cleanup reverse", [["agency_id", "routes", "agency_id"]]);
-			$this->log("$count unbenutzte agencies gelöscht.");
+			$this->log("$count unbenutzte agencies markiert.");
 		}
 		catch(DBException $e)
 		{
@@ -242,8 +242,6 @@ class GTFSImporter extends ZipImporter
 			{
 				$this->abort("Datenbankfehler beim Übernehmen der Daten.", $e);
 			}
-
-			$this->importLoadFile($fileOptions);
 		}
 
 		return $this;
