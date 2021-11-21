@@ -104,9 +104,6 @@
 			const deleteDataset = async (self, datasetId) => {
 				getAjax(self, "deleteDataset", datasetId);
 			}
-			const cleanupDataset = async (self, datasetId) => {
-				getAjax(self, "cleanupDataset", datasetId);
-			}
 			
 			const clearCache = async (self) => {
 				getAjax(self, "clearCache");
@@ -185,7 +182,6 @@
 					<td><?= $dataset["counts"]["trips"] ?></td>
 					<td>
 						<button onclick="deleteDataset(this, <?= $dataset["dataset_id"] ?>)">löschen</button>
-						<button onclick="cleanupDataset(this, <?= $dataset["dataset_id"] ?>)">aufräumen</button>
 					</td>
 				</tr>
 			<?php }} else { ?>

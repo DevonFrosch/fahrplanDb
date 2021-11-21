@@ -36,27 +36,6 @@
 				{
 					return ["error" => "Fehler beim Löschen.", "exception" => $e->getLongMessage()];
 				}
-			case "cleanupDataset":
-				if(!isset($_REQUEST["dataset"]) || !is_numeric($_REQUEST["dataset"]))
-				{
-					return ["error" => "Aktion nicht erkannt."];
-				}
-				try
-				{
-					$importer->setDatasetId($_REQUEST["dataset"]);
-					runDataCleanup($importer);
-					
-					return ["result" => "Aufräumen ausgeführt."];
-				}
-				catch(DBException $e)
-				{
-					return ["error" => "Fehler beim Aufräumen.", "exception" => $e->getLongMessage()];
-				}
-				catch(ImportException $e)
-				{
-					return ["error" => "Fehler beim Löschen.", "exception" => $e->getLongMessage()];
-				}
-				
 			case "clearCache":
 				try
 				{
