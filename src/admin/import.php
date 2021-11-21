@@ -1,6 +1,7 @@
 <?php
-	require_once("../include/HtmlHelper.class.php");
+	require_once("../include/global.inc.php");
 	require_once("../include/import.inc.php");
+	require_once("../include/HtmlHelper.class.php");
 	
 	function printResult(array $result) : string
 	{

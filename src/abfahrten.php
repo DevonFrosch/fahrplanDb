@@ -1,4 +1,5 @@
 <?php
+	require_once("include/global.inc.php");
 	require_once("include/HtmlHelper.class.php");
 	require_once("include/db/DBReadHandler.class.php");
 	require_once("include/GTFSConstants.class.php");
@@ -12,15 +13,7 @@
 	$stopId = HtmlHelper::getStringParameter("stop");
 	$date = HtmlHelper::getStringParameter("date");
 	
-	$db = null;
-	try
-	{
-		$db = new DBReadHandler();
-	}
-	catch(DBException $e)
-	{
-		die("Datenbankverbindung nicht m&ouml;glich!\n<!-- ".$e->getLongMessage()." -->");
-	}
+	$db = getDBReadWriteHandler();
 	
 	if($stopId !== null)
 	{

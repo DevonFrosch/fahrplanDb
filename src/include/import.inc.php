@@ -4,19 +4,6 @@ require_once("db/DBReadWriteHandler.class.php");
 require_once("import/GTFSImporter.class.php");
 require_once("GTFSConstants.class.php");
 
-function getDBReadWriteHandler() : DBReadWriteHandler
-{
-	try
-	{
-		require("config.php");
-		$dbpwd = $config["dbpwd"];
-		return new DBReadWriteHandler($dbpwd);
-	}
-	catch(DBException $e)
-	{
-		die("Datenbankverbindung nicht m&ouml;glich!\n<!-- ".$e->getLongMessage()." -->");
-	}
-}
 function getGTFSImporter(DBReadWriteHandler $db) : GTFSImporter
 {
 	require("config.php");
