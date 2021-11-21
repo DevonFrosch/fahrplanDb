@@ -4,15 +4,13 @@ require_once("db/DBReadWriteHandler.class.php");
 require_once("import/GTFSImporter.class.php");
 require_once("GTFSConstants.class.php");
 
-define("LOG_DIR", "/var/import/logs");
-define("IMPORT_DIR", "/var/import/files");
-define("EXTRACT_DIR", "/var/import/cache");
-
 function getDBReadWriteHandler() : DBReadWriteHandler
 {
 	try
 	{
-		return new DBReadWriteHandler();
+		require("config.php");
+		$dbpwd = $config["dbpwd"];
+		return new DBReadWriteHandler($dbpwd);
 	}
 	catch(DBException $e)
 	{
@@ -21,7 +19,10 @@ function getDBReadWriteHandler() : DBReadWriteHandler
 }
 function getGTFSImporter(DBReadWriteHandler $db) : GTFSImporter
 {
-	$importer = new GTFSImporter($db, IMPORT_DIR, EXTRACT_DIR, LOG_DIR);
+	require("config.php");
+	$importPaths = $config["importPaths"];
+	
+	$importer = new GTFSImporter($db, $importPaths["IMPORT_DIR"], $importPaths["EXTRACT_DIR"], $importPaths["LOG_DIR"]);
 	$importer->enableQueryLogger(true);
 	return $importer;
 }

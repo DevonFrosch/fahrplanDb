@@ -18,20 +18,16 @@ class DBHandler
 		"trips",
 	];
 	
-	public function __construct()
+	public function __construct(array $dbConfig)
 	{
-		require_once("dbconfig.php");
-		
 		try
 		{
-			$this->pdo = new PDO('mysql:host='.$dbpwd['host'].';dbname='.$dbpwd['db'], $dbpwd['user'], $dbpwd['passw'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+			$this->pdo = new PDO('mysql:host='.$dbConfig['host'].';dbname='.$dbConfig['db'], $dbConfig['user'], $dbConfig['passw'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 		}
 		catch(PDOException $e)
 		{
 			throw new DBException("Fehler beim Verbinden mit der Datenbank", $e);
 		}
-		
-		unset($dbpwd);
 	}
 	public function setQueryLogger(?callable $queryLogger) : void
 	{
