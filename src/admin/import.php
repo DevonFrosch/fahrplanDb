@@ -145,7 +145,7 @@
 		<h1>Fahrplan-DB - Import</h1>
 		<?= HtmlHelper::resultBlock($result); ?>
 
-		<h3>Vorhandene Datasets</h3>
+		<h3>Vorhandene Datasets (<a href="">aktualisieren</a>)</h3>
 		<table class="data datasets">
 			<tr>
 				<th>ID</th>
