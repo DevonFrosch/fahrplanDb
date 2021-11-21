@@ -149,7 +149,7 @@ abstract class ZipImporter extends Importer
 		// File too short -> just guess
 		if($position < 2)
 		{
-			$this->log("    detectEOL(): Zeile zu kurz, nehme \\n");
+			$this->log("detectEOL(): Zeile zu kurz, nehme \\n");
 			return "\n";
 		}
 		
@@ -164,12 +164,12 @@ abstract class ZipImporter extends Importer
 		{
 			if(strpos($data, $ending) !== false)
 			{
-				$this->log("    detectEOL(): Gefunden: $display");
+				$this->log("detectEOL(): Gefunden: $display");
 				return $ending;
 			}
 		}
 		// Just guess
-		$this->log("    detectEOL(): Kein Zeilenende gefunden, nehme \\n");
+		$this->log("detectEOL(): Kein Zeilenende gefunden, nehme \\n");
 		return "\n";
 	}
 	
