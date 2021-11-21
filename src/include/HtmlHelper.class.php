@@ -11,7 +11,7 @@ class HtmlHelper
 		header("Location: ".$path);
 		die("<p><a href='$path'>Leite um...</a></p>");
 	}
-	
+
 	public static function getNumericParameter(string $name, ?int $default = null) : ?int
 	{
 		if(isset($_REQUEST[$name]) && is_numeric($_REQUEST[$name]))
@@ -28,7 +28,7 @@ class HtmlHelper
 		}
 		return $default;
 	}
-	
+
 	public static function getChosenDatasetId() : int
 	{
 		if(!isset($_REQUEST["dataset"]) || !is_numeric($_REQUEST["dataset"]) || $_REQUEST["dataset"] <= 0)
@@ -37,7 +37,7 @@ class HtmlHelper
 		}
 		return (int) $_REQUEST["dataset"];
 	}
-	
+
 	public static function resultBlock(array $result, ?Importer $importer = null) : string
 	{
 		$html = [];
@@ -45,12 +45,12 @@ class HtmlHelper
 		{
 			$html[] = "<div class='result'>";
 			$html[] = "<h3>Ergebnis</h3>";
-			
+
 			foreach($result as $line)
 			{
 				$html[] = self::resultToString($line);
 			}
-			
+
 			if($importer != null && $importer->hasLog())
 			{
 				$html[] = "<pre>".$importer->printLog()."</pre>";
@@ -59,8 +59,8 @@ class HtmlHelper
 		}
 		return join(PHP_EOL, $html);
 	}
-	
-	
+
+
 	protected function resultToString(array $result) : string
 	{
 		if(!$result)
@@ -82,13 +82,13 @@ class HtmlHelper
 				return "<p>".$result["msg"]."</p>";
 		}
 	}
-	
+
 	public static function dateSelect(array $marginDates, array $additionalParams = []) : string
 	{
 		$currentDate = self::getStringParameter("date", "");
 		$startDate = (isset($marginDates[0]) && $marginDates[0] !== null) ? $marginDates[0] : "";
 		$endDate = (isset($marginDates[1]) && $marginDates[1] !== null) ? $marginDates[1] : "";
-		
+
 		$html = [];
 		$html[] = "<div class='dateSelect'>";
 			$html[] = "<form action='' method='GET'>";
@@ -104,7 +104,7 @@ class HtmlHelper
 	public static function nameFilter(array $additionalParams = []) : string
 	{
 		$name = self::getStringParameter("name", "");
-		
+
 		$html = [];
 		$html[] = "<div class='dateSelect'>";
 			$html[] = "<form action='' method='GET'>";
@@ -117,7 +117,7 @@ class HtmlHelper
 		$html[] = "</div>";
 		return join(PHP_EOL, $html);
 	}
-	
+
 	public static function addDefaultParams(array $params, array $skip) : array
 	{
 		$default = [
@@ -164,9 +164,9 @@ class HtmlHelper
 		}
 		return join(PHP_EOL, $html);
 	}
-	
-	
-	
+
+
+
 	public static function stopHtml(?array $stop = null)
 	{
 		$html = [];
@@ -174,12 +174,12 @@ class HtmlHelper
 		{
 			$html[] = "<table class='data addBottomMargin'>";
 			$html[] = "<tbody>";
-			
+
 			$html[] = "<tr>";
 			$html[] = "<th>Stop-ID</th>";
 			$html[] = "<td>".$stop["stop_id"]."</td>";
 			$html[] = "</tr>";
-			
+
 			if(isset($stop["stop_code"]))
 			{
 				$html[] = "<tr>";

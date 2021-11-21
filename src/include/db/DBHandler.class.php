@@ -6,7 +6,7 @@ class DBHandler
 {
 	protected $pdo = null;
 	protected $queryLogger = null;
-	
+
 	const TABLES = [
 		"agency",
 		"calendar",
@@ -17,7 +17,7 @@ class DBHandler
 		"stop_times",
 		"trips",
 	];
-	
+
 	public function __construct(array $dbConfig)
 	{
 		try
@@ -42,14 +42,14 @@ class DBHandler
 		$logger = $this->queryLogger;
 		$logger($query, $params, $additionalInfo);
 	}
-	
+
 	protected function query(string $query, ?array $params = null) : array
 	{
 		if(!$this->pdo)
 		{
 			throw new DBException("Keine Datenbankverbindung.");
 		}
-		
+
 		try
 		{
 			$stmt = $this->pdo->prepare($query);
@@ -67,7 +67,7 @@ class DBHandler
 		{
 			throw new DBException("Keine Datenbankverbindung.");
 		}
-		
+
 		try
 		{
 			$stmt = $this->pdo->prepare($query);
@@ -90,7 +90,7 @@ class DBHandler
 		{
 			throw new DBException("Keine Datenbankverbindung.");
 		}
-		
+
 		try
 		{
 			$stmt = $this->pdo->prepare($query);
@@ -108,7 +108,7 @@ class DBHandler
 		{
 			throw new DBException("Keine Datenbankverbindung.");
 		}
-		
+
 		try
 		{
 			return $this->pdo->prepare($query);
@@ -118,7 +118,7 @@ class DBHandler
 			throw new DBException("Datenbankfehler beim Vorbereiten.", $e, $query);
 		}
 	}
-	
+
 	public function disableKeys(string $tableName) : void
 	{
 		$this->execute("ALTER TABLE `$tableName` DISABLE KEYS;");
@@ -127,7 +127,7 @@ class DBHandler
 	{
 		$this->execute("ALTER TABLE `$tableName` ENABLE KEYS;");
 	}
-	
+
 	public function lastInsertId() : ?int
 	{
 		$id = $this->pdo->lastInsertId();
@@ -137,7 +137,7 @@ class DBHandler
 		}
 		return $id;
 	}
-	
+
 	protected function joinKeyValuePairs(array $pairs, string $glue = ", ") : string
 	{
 		$sets = [];
@@ -147,7 +147,7 @@ class DBHandler
 			{
 				$sets[] = $value;
 			}
-			
+
 			if(empty($key) || $value === null || $value == "")
 			{
 				throw new DBException("joinKeyValuePairs: Falsches Format für pairs.", $exception);

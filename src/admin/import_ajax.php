@@ -1,20 +1,20 @@
 <?php
 	header("Content-Type: application/json");
-	
+
 	require_once("../include/global.inc.php");
 	require_once("../include/import.inc.php");
 	require_once("../include/import/ImportException.class.php");
-	
+
 	function action() : array
 	{
 		if(!isset($_REQUEST["action"]))
 		{
 			return ["error" => "Keine Aktion gewählt."];
 		}
-		
+
 		$db = getDBReadWriteHandler();
 		$importer = getGTFSImporter($db);
-		
+
 		switch($_REQUEST["action"])
 		{
 			case "deleteDataset":
@@ -54,6 +54,6 @@
 				return ["error" => "Aktion nicht erkannt."];
 		}
 	}
-	
+
 	echo json_encode(action());
-	
+

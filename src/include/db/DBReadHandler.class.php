@@ -5,14 +5,14 @@ require_once("DBHandler.class.php");
 class DBReadHandler extends DBHandler
 {
 	public const DATE_REGEX = "/[1-9][0-9]{3}-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])/";
-	
+
 	public const MAX_ROWS = 1500;
-	
+
 	public function getDatasets(bool $withCounts = false) : array
 	{
 		$sql = "SELECT * FROM datasets";
 		$datasets = $this->query($sql);
-		
+
 		if($withCounts)
 		{
 			foreach($datasets as $i => $dataset)
@@ -25,10 +25,10 @@ class DBReadHandler extends DBHandler
 				}
 			}
 		}
-		
+
 		return $datasets;
 	}
-	
+
 	public function getMarginDates(int $datasetId) : array
 	{
 		$result = $this->query("
@@ -46,7 +46,7 @@ class DBReadHandler extends DBHandler
 			$result[0]["end_date"],
 		];
 	}
-	
+
 	public function isValidDataset(int $datasetId) : bool
 	{
 		try
@@ -65,12 +65,12 @@ class DBReadHandler extends DBHandler
 			return false;
 		}
 	}
-	
+
 	public function getTableCounts(string $tableName) : array
 	{
 		$sql = "SELECT dataset_id, COUNT(*) count FROM `$tableName` GROUP BY dataset_id";
 		$result = $this->query($sql);
-		
+
 		$counts = [];
 		foreach($result as $count)
 		{
@@ -96,12 +96,12 @@ class DBReadHandler extends DBHandler
 		}
 		return $sum;
 	}
-	
+
 	protected function tripCountQuery(?string $date = null) : string
 	{
 		$additionalJoin = "";
 		$additionalWhere = "";
-		
+
 		if($date !== null)
 		{
 			$additionalJoin .= "
@@ -123,7 +123,7 @@ class DBReadHandler extends DBHandler
 					OR IFNULL(cd.exception_type, 0) = '1'
 				)";
 		}
-		
+
 		return "SELECT COUNT(*)
 				FROM stop_times st
 				$additionalJoin
@@ -147,19 +147,19 @@ class DBReadHandler extends DBHandler
 				) children_count
 			FROM stops s
 			WHERE dataset_id = :datasetId";
-		
+
 		if($date !== null)
 		{
 			$params[":date"] = $date;
 		}
-		
+
 		if($nameFilter !== null)
 		{
 			$sql .= "
 				AND stop_name LIKE :nameFilter";
 			$params[":nameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $nameFilter)."%";
 		}
-		
+
 		if($parentStopId !== null)
 		{
 			$sql .= "
@@ -171,22 +171,22 @@ class DBReadHandler extends DBHandler
 			$sql .= "
 				AND (parent_station IS NULL OR parent_station = '')";
 		}
-		
-		
-		
+
+
+
 		$sql .= "
 			ORDER BY s.stop_name ASC, s.platform_code ASC, s.stop_id ASC
 			LIMIT ".(self::MAX_ROWS+1);
-		
+
 		//*
 		echo "<pre>";
 		var_dump($sql, $params);
 		echo "</pre>";
 		//*/
-		
+
 		return $this->query($sql, $params);
 	}
-	
+
 	public function getStop(int $datasetId, string $stopId) : ?array
 	{
 		$stops = $this->query("
@@ -204,7 +204,7 @@ class DBReadHandler extends DBHandler
 		}
 		return null;
 	}
-	
+
 	public function getAgencies(int $datasetId) : array
 	{
 		return $this->query("
@@ -216,17 +216,17 @@ class DBReadHandler extends DBHandler
 			":datasetId" => $datasetId
 		]);
 	}
-	
+
 	public function getRoutes(int $datasetId, ?string $agencyId = null, ?string $date = null) : array
 	{
 		self::checkDate($date);
-		
+
 		$additionalJoin = "";
 		$additionalWhere = "";
 		$params = [
 			":datasetId" => $datasetId,
 		];
-		
+
 		if($date !== null)
 		{
 			$additionalWhere .= "
@@ -250,14 +250,14 @@ class DBReadHandler extends DBHandler
 				)";
 			$params[":date"] = $date;
 		}
-		
+
 		if($agencyId !== null)
 		{
 			$additionalWhere .= "
 				AND a.agency_id = :agencyId";
 			$params[":agencyId"] = $agencyId;
 		}
-		
+
 		$sql = "
 			SELECT r.*, COALESCE(r.route_short_name, r.route_long_name, '') AS route_name, a.agency_name
 			FROM routes r
@@ -271,7 +271,7 @@ class DBReadHandler extends DBHandler
 			LIMIT ".(self::MAX_ROWS+1);
 		return $this->query($sql, $params);
 	}
-	
+
 	public function getRoute(int $datasetId, string $routeId) : ?array
 	{
 		$routes = $this->query("
@@ -292,18 +292,18 @@ class DBReadHandler extends DBHandler
 		}
 		return null;
 	}
-	
+
 	public function getTrips(int $datasetId, string $routeId, ?string $date = null, string $direction = "") : array
 	{
 		self::checkDate($date);
-		
+
 		$additionalJoin = "";
 		$additionalWhere = "";
 		$params = [
 			":datasetId" => $datasetId,
 			":routeId" => $routeId,
 		];
-		
+
 		if($date !== null)
 		{
 			$additionalJoin .= "
@@ -323,14 +323,14 @@ class DBReadHandler extends DBHandler
 				)";
 			$params[":date"] = $date;
 		}
-		
+
 		if($direction === "0" || $direction === "1")
 		{
 			$additionalWhere .= "
 				AND t.direction_id = :direction";
 			$params[":direction"] = $direction;
 		}
-		
+
 		$sql = "
 			SELECT t.*,
 				s1.stop_name AS start, s1.platform_code start_platform_code, st1.departure_time,
@@ -360,10 +360,10 @@ class DBReadHandler extends DBHandler
 				$additionalWhere
 			ORDER BY st1.arrival_time ASC, st1.departure_time ASC, t.trip_short_name ASC, t.trip_id ASC
 			LIMIT ".(self::MAX_ROWS+1);
-		
+
 		return $this->query($sql, $params);
 	}
-	
+
 	public function getTrip(int $datasetId, string $tripId) : ?array
 	{
 		$trips = $this->query("
@@ -387,7 +387,7 @@ class DBReadHandler extends DBHandler
 		}
 		return null;
 	}
-	
+
 	public function getStopTimesTrip(int $datasetId, string $tripId) : array
 	{
 		return $this->query("
@@ -404,18 +404,18 @@ class DBReadHandler extends DBHandler
 			":tripId" => $tripId,
 		]);
 	}
-	
+
 	public function getStopTimesStop(int $datasetId, string $stopId, ?string $date = null) : array
 	{
 		self::checkDate($date);
-		
+
 		$additionalJoin = "";
 		$additionalWhere = "";
 		$params = [
 			":datasetId" => $datasetId,
 			":stopId" => $stopId,
 		];
-		
+
 		if($date !== null)
 		{
 			$additionalJoin .= "
@@ -435,7 +435,7 @@ class DBReadHandler extends DBHandler
 				)";
 			$params[":date"] = $date;
 		}
-		
+
 		$sql = "
 			SELECT st.*,
 				t.trip_id, t.trip_headsign, t.trip_short_name,
@@ -456,10 +456,10 @@ class DBReadHandler extends DBHandler
 				$additionalWhere
 			ORDER BY st.arrival_time ASC, st.departure_time ASC, t.trip_short_name ASC
 			LIMIT ".(self::MAX_ROWS+1);
-		
+
 		return $this->query($sql, $params);
 	}
-	
+
 	protected static function checkDate(?string $date) : void
 	{
 		if($date !== null && !preg_match(self::DATE_REGEX, $date))

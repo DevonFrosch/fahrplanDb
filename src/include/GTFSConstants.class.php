@@ -14,7 +14,7 @@ class GTFSConstants
 		self::ROUTE_TYPE_CLASS_OTHER,
 		self::ROUTE_TYPE_CLASS_UNKNOWN,
 	];
-	
+
 	public const ROUTE_TYPES = [
 		0 => ["Straßenbahn", self::ROUTE_TYPE_CLASS_LIGHTRAIL],
 		1 => ["U-Bahn", self::ROUTE_TYPE_CLASS_LIGHTRAIL],
@@ -46,7 +46,7 @@ class GTFSConstants
 		1500 => ["Taxi", self::ROUTE_TYPE_CLASS_OTHER],
 		1700 => ["Sonstiges", self::ROUTE_TYPE_CLASS_UNKNOWN],
 	];
-	
+
 	const LOCATION_TYPES = [
 		0 => "Halt / Bahnsteig",
 		1 => "Bahnhof",
@@ -54,7 +54,7 @@ class GTFSConstants
 		3 => "Allgemeiner Ort",
 		4 => "Einstiegsbereich",
 	];
-	
+
 	public static function getRouteTypeName(int $type): string
 	{
 		if(isset(self::ROUTE_TYPES[$type]))
@@ -88,7 +88,7 @@ class GTFSConstants
 	{
 		return array_filter(self::ROUTE_TYPES, function($rt) use($routeTypeClass) { return $rt[1] == $routeTypeClass; });
 	}
-	
+
 	public static function getLocationTypeName(int $locationType) : string
 	{
 		if(isset(self::LOCATION_TYPES[$locationType]))

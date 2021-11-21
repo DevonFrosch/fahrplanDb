@@ -3,18 +3,18 @@
 	require_once("include/HtmlHelper.class.php");
 	require_once("include/db/DBReadHandler.class.php");
 	require_once("include/GTFSConstants.class.php");
-	
+
 	$datasetId = HtmlHelper::getChosenDatasetId();
 	$marginDates = [];
 	$result = [];
 	$stop = [];
 	$stopTimes = [];
-	
+
 	$stopId = HtmlHelper::getStringParameter("stop");
 	$date = HtmlHelper::getStringParameter("date");
-	
+
 	$db = getDBReadWriteHandler();
-	
+
 	if($stopId !== null)
 	{
 		try
@@ -25,11 +25,11 @@
 		{
 			$result[] = ["type" => "error", "msg" => "Fehler beim Holen des Haltes", "exception" => $e];
 		}
-		
+
 		try
 		{
 			$stopTimes = $db->getStopTimesStop($datasetId, $stopId, $date);
-			
+
 			if(sizeof($stopTimes) > $db::MAX_ROWS)
 			{
 				$result[] = ["type" => "info", "msg" => "Zu viele Datensätze, zeige die ersten ".$db::MAX_ROWS];
@@ -40,7 +40,7 @@
 			$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Fahrten", "exception" => $e];
 		}
 	}
-	
+
 	try
 	{
 		$marginDates = $db->getMarginDates($datasetId);
@@ -49,7 +49,7 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Daten für das Dataset", "exception" => $e];
 	}
-	
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -71,12 +71,12 @@
 			<?= HtmlHelper::getLink("linien", "Linien") ?>
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
-		
+
 		<?= HtmlHelper::dateSelect($marginDates, ["stop" => $stopId]) ?>
-		
+
 		<?php if($stop) { ?>
 		<?= HtmlHelper::stopHtml($stop) ?>
-		
+
 		<table class="data">
 			<thead>
 				<tr>

@@ -100,10 +100,10 @@ class GTFSFileOptions
 	protected $mandatoryFields = [];
 	protected $optionalFields = [];
 	protected $optional = false;
-	
+
 	protected $mandatoryFieldsFound = [];
 	protected $optionalFieldsFound = [];
-	
+
 	function __construct(string $fileName, array $mandatoryFields, array $optionalFields, bool $optional = false, string $tableName = null)
 	{
 		$this->fileName = $fileName;
@@ -115,7 +115,7 @@ class GTFSFileOptions
 		{
 			$this->tableName = $tableName;
 		}
-		
+
 		foreach($this->optionalFields as $field => $default)
 		{
 			if(is_numeric($field))
@@ -124,17 +124,17 @@ class GTFSFileOptions
 			}
 		}
 	}
-	
+
 	public function getFileName() : string
 	{
 		return $this->fileName;
 	}
-	
+
 	public function getTableName() : string
 	{
 		return $this->tableName;
 	}
-	
+
 	// ---------------------
 	public function getMandatoryFields() : array
 	{
@@ -157,7 +157,7 @@ class GTFSFileOptions
 	{
 		return array_diff($this->mandatoryFields, $this->mandatoryFieldsFound);
 	}
-	
+
 	// ---------------------
 	public function getOptionalFields() : array
 	{
@@ -176,7 +176,7 @@ class GTFSFileOptions
 		$this->optionalFieldsFound[] = $field;
 		return true;
 	}
-	
+
 	public function getDefaultForField(string $field)
 	{
 		if(!$this->isOptionalField($field))
@@ -185,7 +185,7 @@ class GTFSFileOptions
 		}
 		return $this->optionalFields[$field];
 	}
-	
+
 	public function isOptional() : bool
 	{
 		return $this->optional;

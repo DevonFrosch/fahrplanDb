@@ -5,7 +5,7 @@ require_once("DBReadHandler.class.php");
 class DBReadWriteHandler extends DBReadHandler
 {
 	const EXCLUSION_COLUMN_NAME = "importExclusion";
-	
+
 	public function addDataset(string $name, string $license, ?string $referenceDate = null, string $desc = "") : bool
 	{
 		$sql = "INSERT INTO `datasets`
@@ -21,30 +21,30 @@ class DBReadWriteHandler extends DBReadHandler
 		]);
 		return $rowCount == 1;
 	}
-	
+
 	public function addToTable(string $name, array $data) : array
 	{
 		$sqlParams = [];
 		$params = [];
 		$errors = [];
-		
+
 		if(empty($data) || !is_array($data[0]))
 		{
 			throw new DBException("Fehler: Falsche Parameter für addToTable.");
 		}
-		
+
 		foreach($data[0] as $key => $value)
 		{
 			$sqlParams[] = "`$key` = :$key";
 			$params[":$key"] = $value;
 		}
-		
+
 		$insertSql = "INSERT INTO `$name` SET ".join(",", $sqlParams).";";
-		
+
 		try
 		{
 			$stmt = $this->prepare($insertSql);
-			
+
 			foreach($data as $index => $line)
 			{
 				foreach($line as $key => $value)
@@ -62,22 +62,22 @@ class DBReadWriteHandler extends DBReadHandler
 		{
 			throw new DBException("Datenbankfehler beim Schreiben.", $e, $insertSql);
 		}
-		
+
 		return $errors;
 	}
-	
+
 	public function loadData(string $fileName, string $eol, string $tableName, array $columns, array $sets, array $params = null) : void
 	{
 		if(!$this->pdo)
 		{
 			throw new DBException("Keine Datenbankverbindung.");
 		}
-		
+
 		if(empty($columns))
 		{
 			throw new DBException("Datenbankfehler: Format für columns falsch.");
 		}
-		
+
 		$sql = "LOAD DATA INFILE ".$this->pdo->quote($fileName)."
 				INTO TABLE `$tableName`
 				FIELDS TERMINATED BY ','
@@ -85,26 +85,26 @@ class DBReadWriteHandler extends DBReadHandler
 				LINES TERMINATED BY '$eol'
 				IGNORE 1 LINES
 				(".join(", ", $columns).") ";
-		
+
 		if(!empty($sets))
 		{
 			$sql .= "
 				SET ".$this->joinKeyValuePairs($sets);
 		}
-		
+
 		$this->logQuery($sql, $params);
 		$this->execute($sql, $params);
 	}
-	
+
 	public function cleanupTable(string $tableName, int $datasetId, string $reason, array $references, bool $useOR = false) : int
 	{
 		if(empty($references))
 		{
 			throw new DBException("Datenbankfehler: cleanupTable braucht Referenzen.");
 		}
-		
+
 		$conditionParts = [];
-		
+
 		foreach($references as $ref)
 		{
 			$conditionParts[] = "NOT EXISTS (
@@ -115,17 +115,17 @@ class DBReadWriteHandler extends DBReadHandler
 					LIMIT 1
 				)";
 		}
-		
+
 		$glue = " AND ";
 		if($useOR)
 		{
 			$glue = " OR ";
 		}
 		$condition = join($glue, $conditionParts);
-		
+
 		return $this->exclude($tableName, $datasetId, $reason, $condition, []);
 	}
-	
+
 	public function deleteData(string $tableName, int $datasetId, string $condition = "1=1", array $params = [], int $chunkedDelete = 0) : int
 	{
 		if(empty($condition))
@@ -162,7 +162,7 @@ class DBReadWriteHandler extends DBReadHandler
 		}
 		return $rowCount;
 	}
-	
+
 	public function getImportTableName(string $tableName) : string
 	{
 		return $tableName."_import";
@@ -178,23 +178,23 @@ class DBReadWriteHandler extends DBReadHandler
 						ADD INDEX IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` (`".self::EXCLUSION_COLUMN_NAME."`)");
 		return $importTableName;
 	}
-	
+
 	public function exclude(string $tableName, int $datasetId, string $reason, string $condition = "1=1", array $params = []) : int
 	{
 		$importTableName = $this->getImportTableName($tableName);
-		
+
 		$params[":datasetId"] = $datasetId;
 		$params[":reason"] = $reason;
 		$sql = "UPDATE `$importTableName`
 				SET `".self::EXCLUSION_COLUMN_NAME."` = :reason
 				WHERE `dataset_id` = :datasetId
 				AND $condition";
-		
+
 		$this->logQuery($sql, $params);
 		$rowCount = $this->execute($sql, $params);
 		return $rowCount;
 	}
-	
+
 	public function copyFromImportTable(string $tableName, array $columns = []) : int
 	{
 		$importTableName = $this->getImportTableName($tableName);
@@ -207,7 +207,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$rowCount = $this->execute($sql);
 		return $rowCount;
 	}
-	
+
 	public function updateParentStops(int $datasetId) : int
 	{
 		if($datasetId < 0)
@@ -228,14 +228,14 @@ class DBReadWriteHandler extends DBReadHandler
 		$this->logQuery($sql, $params);
 		return $this->execute($sql, $params);
 	}
-	
+
 	public function setDatasetDates(int $datasetId) : int
 	{
 		if($datasetId < 0)
 		{
 			throw new DBException("Datenbankfehler: datasetId negativ.");
 		}
-		
+
 		$sql = "
 			UPDATE datasets s
 			SET s.start_date = LEAST(
@@ -257,7 +257,7 @@ class DBReadWriteHandler extends DBReadHandler
 			WHERE s.dataset_id = :datasetId";
 		$params = [
 			":datasetId" => $datasetId,
-			
+
 			// Definition nach https://mariadb.com/kb/en/date/
 			// Ansonsten nimmt least() immer den NULL-Wert, wenn einer von beiden nicht vorhanden ist
 			":minDate" => "1000-00-00",

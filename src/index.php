@@ -4,7 +4,7 @@
 	require_once("include/db/DBReadHandler.class.php");
 
 	$db = getDBReadWriteHandler();
-	
+
 	$result = [];
 	$datasets = [];
 	try
@@ -27,7 +27,7 @@
 	<body>
 		<h1>Fahrplan-Datenbank</h1>
 		<?= HtmlHelper::resultBlock($result); ?>
-		
+
 		<p>
 			Hier werden Fahrplandaten für den StellwerkSim gesammelt. Die Daten sind in verschiedene Datensätze aufgeteilt - zum Beispiel pro Land. Soweit möglich ist dem Datensatz die Lizenz der Rohdaten beigelegt.
 		</p>

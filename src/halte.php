@@ -2,18 +2,18 @@
 	require_once("include/global.inc.php");
 	require_once("include/HtmlHelper.class.php");
 	require_once("include/db/DBReadHandler.class.php");
-	
+
 	$datasetId = HtmlHelper::getChosenDatasetId();
 	$result = [];
 	$stop = [];
 	$stops = [];
-	
+
 	$stopId = HtmlHelper::getStringParameter("stop");
 	$nameFilter = HtmlHelper::getStringParameter("name");
 	$date = HtmlHelper::getStringParameter("date");
-	
+
 	$db = getDBReadWriteHandler();
-	
+
 	if($stopId !== null)
 	{
 		try
@@ -25,11 +25,11 @@
 			$result[] = ["type" => "error", "msg" => "Fehler beim Holen des Haltes", "exception" => $e];
 		}
 	}
-	
+
 	try
 	{
 		$stops = $db->getStops($datasetId, $stopId, $nameFilter, $date);
-		
+
 		if(sizeof($stops) > $db::MAX_ROWS)
 		{
 			$result[] = ["type" => "info", "msg" => "Zu viele Datensätze, zeige die ersten ".$db::MAX_ROWS];
@@ -39,7 +39,7 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Halte", "exception" => $e];
 	}
-	
+
 	try
 	{
 		$marginDates = $db->getMarginDates($datasetId);
@@ -63,7 +63,7 @@
 			<?= HtmlHelper::getLink("linien", "Linien") ?>
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
-		
+
 		<?= HtmlHelper::stopHtml($stop) ?>
 		<?= HtmlHelper::dateSelect($marginDates, ["stop" => $stopId, "name" => $nameFilter]) ?>
 		<?= HtmlHelper::nameFilter(["stop" => $stopId]) ?>

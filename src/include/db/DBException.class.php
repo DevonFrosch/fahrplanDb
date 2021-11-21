@@ -3,13 +3,13 @@
 class DBException extends Exception
 {
 	protected $query = "";
-	
+
 	public function __construct($message = '', Throwable $previous = null, string $query = "")
 	{
 		parent::__construct($message, 0, $previous);
 		$this->query = $query;
 	}
-	
+
 	public function getLongMessage() : string
 	{
 		$str = $this->__toString();
@@ -20,7 +20,7 @@ class DBException extends Exception
 		}
 		return $str;
 	}
-	
+
 	public function getQuery() : string
 	{
 		return $this->query;

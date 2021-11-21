@@ -3,18 +3,18 @@
 	require_once("include/HtmlHelper.class.php");
 	require_once("include/db/DBReadHandler.class.php");
 	require_once("include/GTFSConstants.class.php");
-	
+
 	$datasetId = HtmlHelper::getChosenDatasetId();
 	$marginDates = [];
 	$result = [];
 	$trip = [];
 	$stopTimes = [];
-	
+
 	$tripId = HtmlHelper::getStringParameter("trip");
 	$date = HtmlHelper::getStringParameter("date");
-	
+
 	$db = getDBReadWriteHandler();
-	
+
 	if($tripId !== null)
 	{
 		try
@@ -25,11 +25,11 @@
 		{
 			$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Fahrt", "exception" => $e];
 		}
-		
+
 		try
 		{
 			$stopTimes = $db->getStopTimesTrip($datasetId, $tripId);
-			
+
 			if(sizeof($stopTimes) > $db::MAX_ROWS)
 			{
 				$result[] = ["type" => "info", "msg" => "Zu viele Datensätze, zeige die ersten ".$db::MAX_ROWS];
@@ -63,9 +63,9 @@
 			<?= HtmlHelper::getLink("linien", "Linien") ?>
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
-		
+
 		<?= HtmlHelper::dateSelect($marginDates, ["trip" => $tripId]) ?>
-		
+
 		<?php if($trip) { ?>
 		<table class="data addBottomMargin">
 			<tbody>
@@ -99,7 +99,7 @@
 				</tr>
 			</tbody>
 		</table>
-		
+
 		<table class="data">
 			<thead>
 				<tr>

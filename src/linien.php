@@ -3,18 +3,18 @@
 	require_once("include/HtmlHelper.class.php");
 	require_once("include/db/DBReadHandler.class.php");
 	require_once("include/GTFSConstants.class.php");
-	
+
 	$datasetId = HtmlHelper::getChosenDatasetId();
 	$marginDates = [];
 	$result = [];
 	$agencies = [];
 	$routes = [];
-	
+
 	$agencyId = HtmlHelper::getStringParameter("agency");
 	$date = HtmlHelper::getStringParameter("date");
-	
+
 	$db = getDBReadWriteHandler();
-	
+
 	try
 	{
 		$agencies = $db->getAgencies($datasetId);
@@ -23,13 +23,13 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Verkehrsunternehmen", "exception" => $e];
 	}
-	
+
 	array_unshift($agencies, ["agency_id" => "", "agency_name" => "-- Keine --"]);
-	
+
 	try
 	{
 		$routes = $db->getRoutes($datasetId, $agencyId, $date);
-		
+
 		if(sizeof($routes) > $db::MAX_ROWS)
 		{
 			$result[] = ["type" => "info", "msg" => "Zu viele Datensätze, zeige die ersten ".$db::MAX_ROWS];
@@ -39,7 +39,7 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Linien", "exception" => $e];
 	}
-	
+
 	try
 	{
 		$marginDates = $db->getMarginDates($datasetId);
@@ -48,7 +48,7 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Daten für das Dataset", "exception" => $e];
 	}
-	
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -64,9 +64,9 @@
 			<?= HtmlHelper::getLink("linien", "Linien") ?>
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
-		
+
 		<?= HtmlHelper::dateSelect($marginDates, ["agency" => $agencyId]) ?>
-		
+
 		<div class="addBottomMargin">
 			<form action="" method="GET">
 				<?= HtmlHelper::getHiddenParams() ?>

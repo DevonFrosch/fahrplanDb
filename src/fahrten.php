@@ -3,19 +3,19 @@
 	require_once("include/HtmlHelper.class.php");
 	require_once("include/db/DBReadHandler.class.php");
 	require_once("include/GTFSConstants.class.php");
-	
+
 	$datasetId = HtmlHelper::getChosenDatasetId();
 	$marginDates = [];
 	$result = [];
 	$route = [];
 	$trips = [];
-	
+
 	$routeId = HtmlHelper::getStringParameter("route");
 	$date = HtmlHelper::getStringParameter("date");
 	$direction = HtmlHelper::getStringParameter("direction", "");
-	
+
 	$db = getDBReadWriteHandler();
-	
+
 	if($routeId !== null)
 	{
 		try
@@ -26,11 +26,11 @@
 		{
 			$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Route", "exception" => $e];
 		}
-		
+
 		try
 		{
 			$trips = $db->getTrips($datasetId, $routeId, $date, $direction);
-			
+
 			if(sizeof($trips) > $db::MAX_ROWS)
 			{
 				$result[] = ["type" => "info", "msg" => "Zu viele Datensätze, zeige die ersten ".$db::MAX_ROWS];
@@ -41,7 +41,7 @@
 			$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Fahrten", "exception" => $e];
 		}
 	}
-	
+
 	try
 	{
 		$marginDates = $db->getMarginDates($datasetId);
@@ -50,7 +50,7 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Daten für das Dataset", "exception" => $e];
 	}
-	
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -66,9 +66,9 @@
 			<?= HtmlHelper::getLink("linien", "Linien") ?>
 		</div>
 		<?= HtmlHelper::resultBlock($result) ?>
-		
+
 		<?= HtmlHelper::dateSelect($marginDates, ["route" => $routeId]) ?>
-		
+
 		<?php if($route) { ?>
 		<table class="data addBottomMargin">
 			<tbody>
@@ -102,7 +102,7 @@
 				</tr>
 			</tbody>
 		</table>
-		
+
 		<table class="data">
 			<thead>
 				<tr>
@@ -115,7 +115,7 @@
 					<th>an</th>
 				</tr>
 			</thead>
-			
+
 			<tbody>
 				<?php foreach($trips as $trip) { ?>
 				<tr>

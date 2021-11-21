@@ -2,7 +2,7 @@
 	require_once("../include/global.inc.php");
 	require_once("../include/import.inc.php");
 	require_once("../include/HtmlHelper.class.php");
-	
+
 	function printResult(array $result) : string
 	{
 		if(!$result)
@@ -24,12 +24,12 @@
 				return "<p>".$result["msg"]."</p>";
 		}
 	}
-	
+
 	$db = getDBReadWriteHandler();
 	$importer = getGTFSImporter($db);
 	$files = $importer->getImportFiles();
 	$result = [];
-	
+
 	$chosenFile = null;
 	if(isset($_POST["name"]) && isset($_POST["file"]))
 	{
@@ -43,7 +43,7 @@
 			{
 				$result[] = ["type" => "error", "msg" => "Datei nicht gefunden"];
 			}
-			
+
 			if(empty(trim($_POST["name"])))
 			{
 				$result[] = ["type" => "error", "msg" => "Kein Name angegeben"];
@@ -73,7 +73,7 @@
 				{
 					$referenceDate = $_POST["reference_date"];
 				}
-				
+
 				import($importer, trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile);
 			}
 		}
@@ -82,7 +82,7 @@
 			$result[] = ["type" => "error", "msg" => "Fehler beim Import, Log beachten", "exception" => $e];
 		}
 	}
-	
+
 	$datasets = [];
 	try
 	{
@@ -104,33 +104,33 @@
 			const deleteDataset = async (self, datasetId) => {
 				getAjax(self, "deleteDataset", datasetId);
 			}
-			
+
 			const clearCache = async (self) => {
 				getAjax(self, "clearCache");
 			}
-			
+
 			const getAjax = async (button, action, datasetId) => {
 				setButtonProgress(button, "in Arbeit...");
-				
+
 				const body = new FormData();
 				body.append("action", action);
 				if(datasetId !== undefined) {
 					body.append("dataset", datasetId);
 				}
-				
+
 				const response = await fetch("import_ajax.php", {
 					method: "POST",
 					body,
 				});
-				
+
 				try {
 					const result = await response.clone().json();
-					
+
 					if(result.result) {
 						setButtonDone(button, result.result);
 						return;
 					}
-					
+
 					setButtonError(button, result.error, result.exception);
 				}
 				catch(error) {
@@ -144,7 +144,7 @@
 	<body>
 		<h1>Fahrplan-DB - Import</h1>
 		<?= HtmlHelper::resultBlock($result); ?>
-		
+
 		<h3>Vorhandene Datasets</h3>
 		<table class="data datasets">
 			<tr>
@@ -188,7 +188,7 @@
 				<tr><td colspan="15" style="text-align: center">Keine Datasets</td></tr>
 			<?php } ?>
 		</table>
-		
+
 		<div class="import-new">
 			<h3>Neuer Import (Dataset)</h3>
 			<p>
