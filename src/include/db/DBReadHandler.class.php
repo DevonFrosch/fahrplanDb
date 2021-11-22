@@ -178,12 +178,6 @@ class DBReadHandler extends DBHandler
 			ORDER BY s.stop_name ASC, s.platform_code ASC, s.stop_id ASC
 			LIMIT ".(self::MAX_ROWS+1);
 
-		//*
-		echo "<pre>";
-		var_dump($sql, $params);
-		echo "</pre>";
-		//*/
-
 		return $this->query($sql, $params);
 	}
 
