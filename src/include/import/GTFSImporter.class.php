@@ -233,10 +233,16 @@ class GTFSImporter extends ZipImporter
 				$columns = array_merge($fileOptions->getMandatoryFields(), $fileOptions->getOptionalFields());
 
 				$importCount = $this->db->getTableCount($this->db->getImportTableName($tableName), $this->datasetId);
-
-				$this->log("Übernehme $tableName...");
-				$count = $this->db->copyFromImportTable($tableName, $columns);
-				$this->log("$count von $importCount Einträgen aus $tableName übernommen.");
+				if($importCount === null || $importCount == 0)
+				{
+					$this->log("Keine vorhandenen Einträge für $tableName gefunden, wird übersprungen.");
+				}
+				else
+				{
+					$this->log("Übernehme $tableName...");
+					$count = $this->db->copyFromImportTable($tableName, $columns);
+					$this->log("$count von $importCount Einträgen aus $tableName übernommen.");
+				}
 			}
 			catch(DBException $e)
 			{

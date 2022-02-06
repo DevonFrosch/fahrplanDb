@@ -15,14 +15,20 @@ class DBReadHandler extends DBHandler
 
 		if($withCounts)
 		{
+			$counts = [];
+			foreach(self::TABLES as $tableName)
+			{
+				$tableCounts = $this->getTableCounts($tableName);
+				foreach($tableCounts as $datasetId => $count)
+				{
+					$counts[$datasetId][$tableName] = $count;
+				}
+			}
+			
 			foreach($datasets as $i => $dataset)
 			{
-				$datasets[$i]["counts"] = [];
 				$datasetId = $dataset["dataset_id"];
-				foreach(self::TABLES as $tableName)
-				{
-					$datasets[$i]["counts"][$tableName] = $this->getTableCount($tableName, $datasetId);
-				}
+				$datasets[$i]["counts"] = $counts[$datasetId];
 			}
 		}
 
@@ -78,23 +84,10 @@ class DBReadHandler extends DBHandler
 		}
 		return $counts;
 	}
-	public function getTableCount(string $tableName, ?int $datasetId) : int
+	public function getTableCount(string $tableName, int $datasetId) : ?int
 	{
-		$counts = $this->getTableCounts($tableName);
-		if($datasetId !== null)
-		{
-			if(isset($counts[$datasetId]))
-			{
-				return $counts[$datasetId];
-			}
-			return 0;
-		}
-		$sum = 0;
-		foreach($counts as $count)
-		{
-			$sum += $count;
-		}
-		return $sum;
+		$sql = "SELECT COUNT(*) count FROM `$tableName` WHERE dataset_id = :dataset_id";
+		return $this->queryValue($sql, [":dataset_id" => $datasetId]);
 	}
 
 	protected function tripCountQuery(?string $date = null) : string
