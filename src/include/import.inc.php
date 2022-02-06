@@ -14,15 +14,31 @@ function getGTFSImporter(DBReadWriteHandler $db) : GTFSImporter
 	return $importer;
 }
 
-function import(GTFSImporter $importer, string $datasetName, string $license, ?string $referenceDate, string $desc, SplFileInfo $file) : void
+function import(GTFSImporter $importer, string $datasetName, string $license, ?string $referenceDate, string $desc,
+	SplFileInfo $file, ?string $runUntil) : void
 {
 	$importer->addDataset(trim($_POST["name"]), $license, $referenceDate, $desc);
 	$importer->extractZipFile($file);
 	$importer->importFiles();
+	
+	if($runUntil === "filesRead")
+	{
+		$importer->finish(false);
+		return;
+	}
+	
+	$importer->removeExtractedFiles();
 	$importer->removeRouteTypeClasses([GTFSConstants::ROUTE_TYPE_CLASS_BUS, GTFSConstants::ROUTE_TYPE_CLASS_OTHER]);
 	$importer->removeUnusedData();
 	$importer->markParentStops();
 	$importer->setDatasetDates();
+	
+	if($runUntil === "filtered")
+	{
+		$importer->finish();
+		return;
+	}
+
 	$importer->copyImportData();
-	$importer->finish(true);
+	$importer->finish();
 }

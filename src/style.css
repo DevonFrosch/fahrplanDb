@@ -79,6 +79,12 @@ ul.fastlinks li {
 	font-weight: bold;
 }
 
+.actions {
+	display: flex;
+	flex-direction: row;
+	gap: 20px;
+}
+
 .import-new label,
 .import-new .button {
 	display: block;
@@ -86,6 +92,10 @@ ul.fastlinks li {
 }
 .import-new label > * {
 	display: block;
+}
+.import-new label > input[type="checkbox"],
+.import-new label > input[type="radio"] {
+	display: unset;
 }
 
 .pre {

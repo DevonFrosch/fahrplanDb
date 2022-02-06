@@ -75,16 +75,23 @@ abstract class ZipImporter extends Importer
 
 	public abstract function doImportFiles(?array $files) : ZipImporter;
 
-	public function clear() : void
+	public function removeExtractedFiles() : void
 	{
 		if($this->extractPath)
 		{
+			$this->log("Lösche Daten aus ".$this->extractPath);
 			self::delTree($this->extractPath);
 		}
 	}
+	public function clear() : void
+	{
+		removeExtractedFiles();
+	}
 	public function clearAll() : void
 	{
+		$this->log("Lösche Daten aus ".$this->cachePath);
 		self::delTree($this->cachePath, false);
+		$this->log("Lösche Daten aus ".$this->logPath);
 		self::delTree($this->logPath, false);
 	}
 	public function finish($clearImportData = true) : void

@@ -73,8 +73,13 @@
 				{
 					$referenceDate = $_POST["reference_date"];
 				}
+				$runUntil = null;
+				if(isset($_POST["runUntil"]) && !empty($_POST["runUntil"]) && $runUntil !== "complete")
+				{
+					$runUntil = $_POST["runUntil"];
+				}
 
-				import($importer, trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile);
+				import($importer, trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile, $runUntil);
 			}
 		}
 		catch(ImportException $e)
@@ -189,36 +194,52 @@
 			<?php } ?>
 		</table>
 
-		<div class="import-new">
-			<h3>Neuer Import (Dataset)</h3>
-			<p>
-				Wähle eine ZIP-Datei aus. In der ZIP-Datei müssen direkt die txt-Dateien enthalten sein, kein Unterordner.
-			</p>
-			<form method="POST" action="">
-				<label>Name:
-					<input type="text" name="name" value="<?= isset($_POST["name"]) ? $_POST["name"] : "" ?>">
-				</label>
-				<label>Datei:
-					<select name="file">
-						<?php foreach($files as $fileName => $file) { ?>
-						<option <?= ($chosenFile && $chosenFile->getFilename() == $fileName) ? "selected" : "" ?>
-							value='<?= $fileName ?>'><?= $fileName ?></option>
-						<?php } ?>
-					</select>
-				</label>
-				<label>Lizenz:
-					<textarea name="license" rows="1" cols="30"><?= isset($_POST["license"]) ? $_POST["license"] : "" ?></textarea>
-				</label>
-				<label>Datum des Exports (optional):
-					<input type="date" name="reference_date" value="<?= isset($_POST["reference_date"]) ? $_POST["reference_date"] : "" ?>">
-				</label>
-				<label>Beschreibung (optional):
-					<textarea name="desc" rows="1" cols="30"><?= isset($_POST["desc"]) ? $_POST["desc"] : "" ?></textarea>
-				</label>
-				<div class="button"><button type="submit">Import</button></div>
-			</form>
-			<div class="button">
-				<button onclick="clearCache(this)">Cache aufräumen</button>
+		<div class="actions">
+			<div class="import-new">
+				<h3>Neuer Import (Dataset)</h3>
+				<p>
+					Wähle eine ZIP-Datei aus. In der ZIP-Datei müssen direkt die txt-Dateien enthalten sein, kein Unterordner.
+				</p>
+				<form method="POST" action="">
+					<label>Name:
+						<input type="text" name="name" value="<?= isset($_POST["name"]) ? $_POST["name"] : "" ?>">
+					</label>
+					<label>Datei:
+						<select name="file">
+							<?php foreach($files as $fileName => $file) { ?>
+							<option <?= ($chosenFile && $chosenFile->getFilename() == $fileName) ? "selected" : "" ?>
+								value='<?= $fileName ?>'><?= $fileName ?></option>
+							<?php } ?>
+						</select>
+					</label>
+					<label>Lizenz:
+						<textarea name="license" rows="1" cols="30"><?= isset($_POST["license"]) ? $_POST["license"] : "" ?></textarea>
+					</label>
+					<label>Datum des Exports (optional):
+						<input type="date" name="reference_date" value="<?= isset($_POST["reference_date"]) ? $_POST["reference_date"] : "" ?>">
+					</label>
+					<label>Beschreibung (optional):
+						<textarea name="desc" rows="1" cols="30"><?= isset($_POST["desc"]) ? $_POST["desc"] : "" ?></textarea>
+					</label>
+					<p>Laufoptionen:</p>
+					<label><input type="radio" name="runUntil" value="filesRead" />Daten einlesen</label>
+					<label><input type="radio" name="runUntil" value="filtered" />Daten einlesen + filtern</label>
+					<label><input type="radio" name="runUntil" value="complete" checked />Daten einlesen + filtern + übernehmen</label>
+					</label>
+					<div class="button"><button type="submit">Import</button></div>
+				</form>
+				<form>
+			</div>
+			<div>
+				<h3>Datenübernahme</h3>
+				<p>... geplant</p>
+				
+				<hr>
+				
+				<h3>Wartung</h3>
+				<div class="button">
+					<button onclick="clearCache(this)">Cache aufräumen</button>
+				</div>
 			</div>
 		</div>
 	</body>
