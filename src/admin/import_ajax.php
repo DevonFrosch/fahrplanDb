@@ -18,13 +18,13 @@
 		switch($_REQUEST["action"])
 		{
 			case "deleteDataset":
-				if(!isset($_REQUEST["dataset"]) || !is_numeric($_REQUEST["dataset"]))
+				if(!isset($_REQUEST["datasetId"]) || !is_numeric($_REQUEST["datasetId"]))
 				{
-					return ["error" => "Aktion nicht erkannt."];
+					return ["error" => "datasetId nicht gesetzt."];
 				}
 				try
 				{
-					$importer->setDatasetId($_REQUEST["dataset"]);
+					$importer->setDatasetId($_REQUEST["datasetId"]);
 					$importer->deleteDataset();
 					return ["result" => "Dataset gelöscht."];
 				}

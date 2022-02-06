@@ -31,7 +31,8 @@
 	$result = [];
 
 	$chosenFile = null;
-	if(isset($_POST["name"]) && isset($_POST["file"]))
+	if(isset($_POST["action"]) && $_POST["action"] === "new"
+		&& isset($_POST["name"]) && isset($_POST["file"]))
 	{
 		try
 		{
@@ -56,6 +57,10 @@
 			{
 				$result[] = ["type" => "error", "msg" => "Datum nicht gültig, ggf. löschen"];
 			}
+			elseif(!isset($_POST["runUntil"]) || !GTFSConstants::isImportState($_POST["runUntil"]))
+			{
+				$result[] = ["type" => "error", "msg" => "Laufoption nicht gültig."];
+			}
 			elseif($chosenFile !== null)
 			{
 				$license = "";
@@ -73,13 +78,39 @@
 				{
 					$referenceDate = $_POST["reference_date"];
 				}
-				$runUntil = null;
-				if(isset($_POST["runUntil"]) && !empty($_POST["runUntil"]) && $runUntil !== "complete")
-				{
-					$runUntil = $_POST["runUntil"];
-				}
 
-				import($importer, trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile, $runUntil);
+				import($importer, trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile, $_POST["runUntil"]);
+			}
+		}
+		catch(ImportException $e)
+		{
+			$result[] = ["type" => "error", "msg" => "Fehler beim Import, Log beachten", "exception" => $e];
+		}
+	}
+
+	if(isset($_POST["action"]) && $_POST["action"] === "resume"
+		&& isset($_POST["datasetId"]) && is_numeric($_POST["datasetId"]))
+	{
+		// ...
+	}
+
+	if(isset($_POST["action"]) && $_POST["action"] === "copyDataset"
+		&& isset($_POST["datasetId"]) && is_numeric($_POST["datasetId"]) && isset($_POST["name"]))
+	{
+		try
+		{
+			if(empty(trim($_POST["name"])))
+			{
+				$result[] = ["type" => "error", "msg" => "Kein Name angegeben"];
+			}
+			elseif(!$importer->isDatasetNameAvailable(trim($_POST["name"])))
+			{
+				$result[] = ["type" => "error", "msg" => "Name bereits vorhanden"];
+			}
+			else
+			{
+				$importer->setDatasetId($_POST["datasetId"]);
+				$importer->copyDataset($_POST["name"], isset($_POST["includeImportTables"]));
 			}
 		}
 		catch(ImportException $e)
@@ -97,6 +128,13 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Datasets", "exception" => $e];
 	}
+
+	$resumableDatasets = array_filter($datasets, function($dataset) {
+		return in_array($dataset["import_state"], [
+			GTFSConstants::IMPORT_STATE_FILES_READ,
+			GTFSConstants::IMPORT_STATE_FILTERED,
+		]);
+	});
 ?>
 <!DOCTYPE html>
 <html>
@@ -107,20 +145,22 @@
 		<script type="text/javascript" src="../script.js"></script>
 		<script type="text/javascript">
 			const deleteDataset = async (self, datasetId) => {
-				getAjax(self, "deleteDataset", datasetId);
+				getAjax(self, "deleteDataset", { datasetId });
 			}
 
 			const clearCache = async (self) => {
 				getAjax(self, "clearCache");
 			}
 
-			const getAjax = async (button, action, datasetId) => {
+			const getAjax = async (button, action, data) => {
 				setButtonProgress(button, "in Arbeit...");
 
 				const body = new FormData();
 				body.append("action", action);
-				if(datasetId !== undefined) {
-					body.append("dataset", datasetId);
+				if(data !== undefined) {
+					for(let key of Object.keys(data)) {
+						body.append(key, data[key]);
+					}
 				}
 
 				const response = await fetch("import_ajax.php", {
@@ -160,6 +200,7 @@
 				<th>Beschreibung</th>
 				<th>Erste Fahrt</th>
 				<th>Letzte Fahrt</th>
+				<th>Import-Status</th>
 				<th>Anzahl<br>VUs</th>
 				<th>Anzahl<br>Verkehrstage</th>
 				<th>Anzahl<br>Tagesausnahmen</th>
@@ -178,13 +219,14 @@
 					<td class="pre"><?= $dataset["desc"] ?></td>
 					<td><?= $dataset["start_date"] ? $dataset["start_date"] : "" ?></td>
 					<td><?= $dataset["end_date"] ? $dataset["end_date"] : "" ?></td>
-					<td><?= $dataset["counts"]["agency"] ?></td>
-					<td><?= $dataset["counts"]["calendar"] ?></td>
-					<td><?= $dataset["counts"]["calendar_dates"] ?></td>
-					<td><?= $dataset["counts"]["routes"] ?></td>
-					<td><?= $dataset["counts"]["stops"] ?></td>
-					<td><?= $dataset["counts"]["stop_times"] ?></td>
-					<td><?= $dataset["counts"]["trips"] ?></td>
+					<td><?= $dataset["import_state"] ?></td>
+					<td><?= isset($dataset["counts"]["agency"]) ? $dataset["counts"]["agency"] : "" ?></td>
+					<td><?= isset($dataset["counts"]["calendar"]) ? $dataset["counts"]["calendar"] : "" ?></td>
+					<td><?= isset($dataset["counts"]["calendar_dates"]) ? $dataset["counts"]["calendar_dates"] : "" ?></td>
+					<td><?= isset($dataset["counts"]["routes"]) ? $dataset["counts"]["routes"] : "" ?></td>
+					<td><?= isset($dataset["counts"]["stops"]) ? $dataset["counts"]["stops"] : "" ?></td>
+					<td><?= isset($dataset["counts"]["stop_times"]) ? $dataset["counts"]["stop_times"] : "" ?></td>
+					<td><?= isset($dataset["counts"]["trips"]) ? $dataset["counts"]["trips"] : "" ?></td>
 					<td>
 						<button onclick="deleteDataset(this, <?= $dataset["dataset_id"] ?>)">löschen</button>
 					</td>
@@ -200,7 +242,8 @@
 				<p>
 					Wähle eine ZIP-Datei aus. In der ZIP-Datei müssen direkt die txt-Dateien enthalten sein, kein Unterordner.
 				</p>
-				<form method="POST" action="">
+				<form method="POST" action="" name="new" class="import-form">
+					<input type="hidden" name="action" value="new">
 					<label>Name:
 						<input type="text" name="name" value="<?= isset($_POST["name"]) ? $_POST["name"] : "" ?>">
 					</label>
@@ -221,21 +264,81 @@
 					<label>Beschreibung (optional):
 						<textarea name="desc" rows="1" cols="30"><?= isset($_POST["desc"]) ? $_POST["desc"] : "" ?></textarea>
 					</label>
+
 					<p>Laufoptionen:</p>
-					<label><input type="radio" name="runUntil" value="filesRead" />Daten einlesen</label>
-					<label><input type="radio" name="runUntil" value="filtered" />Daten einlesen + filtern</label>
-					<label><input type="radio" name="runUntil" value="complete" checked />Daten einlesen + filtern + übernehmen</label>
-					</label>
-					<div class="button"><button type="submit">Import</button></div>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_FILES_READ ?>" />Daten einlesen</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_FILTERED ?>" />Daten einlesen + filtern</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_REFINED ?>" />Daten einlesen + filtern + verarbeiten</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_COMPLETE ?>" checked />Daten einlesen + filtern + verarbeiten + übernehmen</label>
+
+					<div class="button">
+						<button type="submit" onclick="setButtonProgress(this, 'wird ausgeführt...')">Import starten</button>
+					</div>
 				</form>
-				<form>
 			</div>
 			<div>
 				<h3>Datenübernahme</h3>
-				<p>... geplant</p>
-				
+				<?php if(!empty($resumableDatasets)) { ?>
+				<form method="POST" action="" name="resume" class="import-form">
+					<input type="hidden" name="action" value="resume">
+
+					<select name="datasetId">
+						<?php foreach($resumableDatasets as $dataset) { ?>
+						<option value="<?= $dataset["dataset_id"] ?>">
+							<?= $dataset["dataset_name"] ?> (<?= $dataset["dataset_id"] ?>) (Status: <?= $dataset["import_state"] ?>)
+						</option>
+						<?php } ?>
+					</select>
+
+					<p>Laufoptionen:</p>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_FILTERED ?>" />Daten filtern</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_REFINED ?>" />Daten filtern + verarbeiten</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_COMPLETE ?>" checked />Daten filtern + verarbeiten + übernehmen</label>
+
+					<div class="button">
+						<button type="submit" onclick="setButtonProgress(this, 'wird ausgeführt...')">Import wiederaufnehmen</button>
+					</div>
+				</form>
+				<?php } else { ?>
+				<p>Keine angefangenen Importe vorhanden</p>
+				<?php } ?>
+
 				<hr>
-				
+
+				<h3>Datensatz kopieren</h3>
+				<?php if(!empty($datasets)) { ?>
+
+				<form method="POST" action="" name="copy-dataset" class="import-form">
+					<input type="hidden" name="action" value="copyDataset">
+					<label>
+						Alter Datensatz:
+						<select name="datasetId">
+							<?php foreach($datasets as $dataset) { ?>
+							<option value="<?= $dataset["dataset_id"] ?>">
+								<?= $dataset["dataset_name"] ?> (<?= $dataset["dataset_id"] ?>)
+							</option>
+							<?php } ?>
+						</select>
+					</label>
+					<label>
+						Neuer Name:
+						<input type="text" name="name" />
+					</label>
+					<label>
+						<input type="checkbox" name="includeImportTables" />
+						Auch mit temporären Import-Tabellen
+					</label>
+
+					<div class="button">
+						<button type="submit" onclick="setButtonProgress(this, 'wird ausgeführt...')">Kopieren</button>
+					</div>
+				</form>
+				<?php } else { ?>
+				<p>Keine Datensätze vorhanden</p>
+				<?php } ?>
+
+				<hr>
+
 				<h3>Wartung</h3>
 				<div class="button">
 					<button onclick="clearCache(this)">Cache aufräumen</button>

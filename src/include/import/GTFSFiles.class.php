@@ -185,6 +185,11 @@ class GTFSFileOptions
 		}
 		return $this->optionalFields[$field];
 	}
+	
+	public function getFields() : array
+	{
+		return array_merge($this->getMandatoryFields(), $this->getOptionalFields());
+	}
 
 	public function isOptional() : bool
 	{

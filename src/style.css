@@ -85,16 +85,16 @@ ul.fastlinks li {
 	gap: 20px;
 }
 
-.import-new label,
-.import-new .button {
+.import-form label,
+.import-form .button {
 	display: block;
 	padding: 5px;
 }
-.import-new label > * {
+.import-form label > * {
 	display: block;
 }
-.import-new label > input[type="checkbox"],
-.import-new label > input[type="radio"] {
+.import-form label > input[type="checkbox"],
+.import-form label > input[type="radio"] {
 	display: unset;
 }
 

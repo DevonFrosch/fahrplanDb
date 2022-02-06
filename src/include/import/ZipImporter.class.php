@@ -85,7 +85,7 @@ abstract class ZipImporter extends Importer
 	}
 	public function clear() : void
 	{
-		removeExtractedFiles();
+		$this->removeExtractedFiles();
 	}
 	public function clearAll() : void
 	{
@@ -98,7 +98,6 @@ abstract class ZipImporter extends Importer
 	{
 		if($clearImportData)
 		{
-			$this->log("Lösche Import-Daten...");
 			$this->clear();
 		}
 		parent::finish();

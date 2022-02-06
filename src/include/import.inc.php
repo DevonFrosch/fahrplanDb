@@ -20,8 +20,9 @@ function import(GTFSImporter $importer, string $datasetName, string $license, ?s
 	$importer->addDataset(trim($_POST["name"]), $license, $referenceDate, $desc);
 	$importer->extractZipFile($file);
 	$importer->importFiles();
+	$importer->setImportState(GTFSConstants::IMPORT_STATE_FILES_READ);
 	
-	if($runUntil === "filesRead")
+	if($runUntil === GTFSConstants::IMPORT_STATE_FILES_READ)
 	{
 		$importer->finish(false);
 		return;
@@ -30,15 +31,26 @@ function import(GTFSImporter $importer, string $datasetName, string $license, ?s
 	$importer->removeExtractedFiles();
 	$importer->removeRouteTypeClasses([GTFSConstants::ROUTE_TYPE_CLASS_BUS, GTFSConstants::ROUTE_TYPE_CLASS_OTHER]);
 	$importer->removeUnusedData();
+	$importer->setImportState(GTFSConstants::IMPORT_STATE_FILTERED);
+	
+	if($runUntil === GTFSConstants::IMPORT_STATE_FILTERED)
+	{
+		$importer->finish();
+		return;
+	}
+	
+	
 	$importer->markParentStops();
 	$importer->setDatasetDates();
+	$importer->setImportState(GTFSConstants::IMPORT_STATE_REFINED);
 	
-	if($runUntil === "filtered")
+	if($runUntil === GTFSConstants::IMPORT_STATE_REFINED)
 	{
 		$importer->finish();
 		return;
 	}
 
 	$importer->copyImportData();
+	$importer->setImportState(GTFSConstants::IMPORT_STATE_COMPLETE);
 	$importer->finish();
 }

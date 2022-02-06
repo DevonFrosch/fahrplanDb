@@ -179,4 +179,9 @@ abstract class Importer
 	{
 		$this->datasetId = $datasetId;
 	}
+	
+	public function setImportState(string $importState) : void
+	{
+		$this->db->setImportState($this->datasetId, $importState);
+	}
 }

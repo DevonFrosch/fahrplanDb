@@ -54,6 +54,19 @@ class GTFSConstants
 		3 => "Allgemeiner Ort",
 		4 => "Einstiegsbereich",
 	];
+	
+	public const IMPORT_STATE_INIT = "INIT";
+	public const IMPORT_STATE_FILES_READ = "FILES_READ";
+	public const IMPORT_STATE_FILTERED = "FILTERED";
+	public const IMPORT_STATE_REFINED = "REFINED";
+	public const IMPORT_STATE_COMPLETE = "COMPLETE";
+	public const IMPORT_STATES = [
+		self::IMPORT_STATE_INIT,
+		self::IMPORT_STATE_FILES_READ,
+		self::IMPORT_STATE_FILTERED,
+		self::IMPORT_STATE_REFINED,
+		self::IMPORT_STATE_COMPLETE,
+	];
 
 	public static function getRouteTypeName(int $type): string
 	{
@@ -96,5 +109,10 @@ class GTFSConstants
 			return self::LOCATION_TYPES[$locationType];
 		}
 		return "Unbekannt ($locationType)";
+	}
+	
+	public static function isImportState(string $importState) : bool
+	{
+		return in_array($importState, self::IMPORT_STATES);
 	}
 }

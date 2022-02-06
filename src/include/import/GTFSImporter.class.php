@@ -19,6 +19,56 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 
+	public function copyDataset(string $name, bool $includeImportTables = false) : ZipImporter
+	{
+		if(!$this->isRunning())
+		{
+			return $this;
+		}
+		if($this->datasetId === null)
+		{
+			$this->abort("Keine datasetId gesetzt.");
+		}
+		$oldDatasetId = $this->datasetId;
+
+		try
+		{
+			$this->datasetId = $this->db->duplicateDataset($oldDatasetId, $name);
+
+			if($this->datasetId === null)
+			{
+				$this->abort("Dataset $name wurde nicht angelegt.");
+			}
+			$this->log("Neues Dataset $name angelegt, id ".$this->datasetId.".");
+
+			foreach(self::GTFS_FILES as $file)
+			{
+				$fileOptions = GTFSFiles::getFileOptions($file);
+				$tableName = $fileOptions->getTableName();
+				$importTableName = $this->db->getImportTableName($tableName);
+				$fields = $fileOptions->getFields();
+
+				$this->log("Kopiere $tableName...");
+				$count = $this->db->copyDatasetData($oldDatasetId, $this->datasetId, $tableName, $fields);
+				$this->log("Fertig, $count Einträge.");
+
+				if($includeImportTables && $importTableName)
+				{
+					$this->log("Kopiere $importTableName...");
+					$count = $this->db->copyDatasetData($oldDatasetId, $this->datasetId, $importTableName, $fields);
+					$this->log("Fertig, $count Einträge.");
+				}
+			}
+
+			$this->log("Dataset $name kopiert, id ".$this->datasetId.".");
+			return $this;
+		}
+		catch(DBException $e)
+		{
+			$this->abort("Fehler beim Kopieren von datasetId $oldDatasetId.", $e);
+		}
+	}
+
 	public static function getImportType() : string
 	{
 		return "GTFS";

@@ -24,7 +24,7 @@ class DBReadHandler extends DBHandler
 					$counts[$datasetId][$tableName] = $count;
 				}
 			}
-			
+
 			foreach($datasets as $i => $dataset)
 			{
 				$datasetId = $dataset["dataset_id"];
@@ -33,6 +33,17 @@ class DBReadHandler extends DBHandler
 		}
 
 		return $datasets;
+	}
+	public function getDataset(int $datasetId) : ?array
+	{
+		$sql = "SELECT * FROM datasets WHERE dataset_id = :datasetId";
+		$result = $this->query($sql, [":datasetId" => $datasetId]);
+
+		if(!empty($result))
+		{
+			return $result[0];
+		}
+		return null;
 	}
 
 	public function getMarginDates(int $datasetId) : array

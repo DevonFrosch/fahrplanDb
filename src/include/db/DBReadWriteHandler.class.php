@@ -5,6 +5,7 @@ require_once("DBReadHandler.class.php");
 class DBReadWriteHandler extends DBReadHandler
 {
 	const EXCLUSION_COLUMN_NAME = "importExclusion";
+	const DATASET_COLUMNS = ["dataset_name", "import_time", "reference_date", "desc", "license", "start_date", "end_date", "import_state"];
 
 	public function addDataset(string $name, string $license, ?string $referenceDate = null, string $desc = "") : bool
 	{
@@ -20,6 +21,51 @@ class DBReadWriteHandler extends DBReadHandler
 			":desc" => $desc,
 		]);
 		return $rowCount == 1;
+	}
+
+	public function duplicateDataset(int $oldDatasetId, string $name) : int
+	{
+		$columns = array_filter(self::DATASET_COLUMNS, function($column) {
+			return $column !== "dataset_name";
+		});
+
+		$params = [
+			":oldDatasetId" => $oldDatasetId,
+			":name" => $name,
+		];
+		$sql = "INSERT INTO `datasets` (dataset_name, `".join("`, `", $columns)."`)
+				SELECT :name, `".join("`, `", $columns)."`
+				FROM `datasets`
+				WHERE `dataset_id` = :oldDatasetId";
+		$this->logQuery($sql, $params);
+		$this->execute($sql, $params);
+
+		return $this->lastInsertId();
+	}
+
+	public function copyDatasetData(int $oldDatasetId, int $newDatasetId, string $tableName, array $columns) : int
+	{
+		$params = [];
+		$params[":oldDatasetId"] = $oldDatasetId;
+		$params[":newDatasetId"] = $newDatasetId;
+		$sql = "INSERT INTO `$tableName` (`dataset_id`, `".join("`, `", $columns)."`)
+				SELECT :newDatasetId, `".join("`, `", $columns)."`
+				FROM `$tableName`
+				WHERE `dataset_id` = :oldDatasetId";
+		$this->logQuery($sql, $params);
+		$rowCount = $this->execute($sql, $params);
+		return $rowCount;
+	}
+
+	public function setImportState(int $datasetId, string $importState) : void
+	{
+		$sql = "UPDATE `datasets`
+				SET `import_state` = :import_state
+				WHERE `dataset_id` = :dataset_id";
+		$rowCount = $this->execute($sql, [
+			":import_state" => $importState,
+			":dataset_id" => $datasetId,
+		]);
 	}
 
 	public function addToTable(string $name, array $data) : array
