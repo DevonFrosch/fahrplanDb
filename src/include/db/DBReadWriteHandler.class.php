@@ -171,7 +171,7 @@ class DBReadWriteHandler extends DBReadHandler
 	{
 		$importTableName = $this->getImportTableName($tableName);
 		$this->execute("DROP TABLE IF EXISTS `$importTableName`");
-		$this->execute("CREATE TEMPORARY TABLE `$importTableName` LIKE `$tableName`");
+		$this->execute("CREATE TABLE `$importTableName` LIKE `$tableName`");
 		$this->execute("ALTER TABLE `$importTableName`
 						ADD COLUMN IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci'");
 		$this->execute("ALTER TABLE `$importTableName`
