@@ -219,7 +219,7 @@
 					<td class="pre"><?= $dataset["desc"] ?></td>
 					<td><?= $dataset["start_date"] ? $dataset["start_date"] : "" ?></td>
 					<td><?= $dataset["end_date"] ? $dataset["end_date"] : "" ?></td>
-					<td><?= $dataset["import_state"] ?></td>
+					<td><?= GTFSConstants::IMPORT_STATES[$dataset["import_state"]] ?></td>
 					<td><?= isset($dataset["counts"]["agency"]) ? $dataset["counts"]["agency"] : "" ?></td>
 					<td><?= isset($dataset["counts"]["calendar"]) ? $dataset["counts"]["calendar"] : "" ?></td>
 					<td><?= isset($dataset["counts"]["calendar_dates"]) ? $dataset["counts"]["calendar_dates"] : "" ?></td>
@@ -285,7 +285,8 @@
 					<select name="datasetId">
 						<?php foreach($resumableDatasets as $dataset) { ?>
 						<option value="<?= $dataset["dataset_id"] ?>">
-							<?= $dataset["dataset_name"] ?> (<?= $dataset["dataset_id"] ?>) (Status: <?= $dataset["import_state"] ?>)
+							<?= $dataset["dataset_name"] ?> (<?= $dataset["dataset_id"] ?>)
+							(Status: <?= GTFSConstants::IMPORT_STATES[$dataset["import_state"]] ?>)
 						</option>
 						<?php } ?>
 					</select>
