@@ -142,10 +142,7 @@ abstract class ZipImporter extends Importer
 	// Quelle: https://stackoverflow.com/a/45290342
 	protected function detectEOL(string $filePath) : string
 	{
-		// first, have PHP auto-detect the line endings, like @AbraCadaver suggested:
-		ini_set("auto_detect_line_endings", true);
-
-		// now open the file and read a single line from it
+		// open the file and read a single line from it
 		$file = fopen($filePath, 'r');
 		fgets($file);
 
