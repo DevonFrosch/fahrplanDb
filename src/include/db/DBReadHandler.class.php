@@ -8,43 +8,10 @@ class DBReadHandler extends DBHandler
 
 	public const MAX_ROWS = 1500;
 
-	public function getDatasets(bool $withCounts = false, array $tableNames = []) : array
+	public function getDatasets() : array
 	{
 		$sql = "SELECT * FROM datasets";
-		$datasets = $this->query($sql);
-
-		if($withCounts)
-		{
-			$counts = [];
-			foreach($tableNames as $tableName)
-			{
-				$tableCounts = $this->getTableCounts($tableName);
-				foreach($tableCounts as $datasetId => $count)
-				{
-					$counts[$datasetId][$tableName] = $count;
-				}
-				$importCounts = $this->getTableCounts($this->getImportTableName($tableName));
-				foreach($importCounts as $datasetId => $count)
-				{
-					if(!isset($counts[$datasetId][$tableName]))
-					{
-						$counts[$datasetId][$tableName] = 0;
-					}
-					$counts[$datasetId][$tableName] += $count;
-				}
-			}
-
-			foreach($datasets as $i => $dataset)
-			{
-				$datasetId = $dataset["dataset_id"];
-				if(isset($counts[$datasetId]))
-				{
-					$datasets[$i]["counts"] = $counts[$datasetId];
-				}
-			}
-		}
-
-		return $datasets;
+		return $this->query($sql);
 	}
 	public function getDataset(int $datasetId) : ?array
 	{

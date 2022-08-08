@@ -136,7 +136,7 @@
 	$datasets = [];
 	try
 	{
-		$datasets = $db->getDatasets(true, GTFSFiles::getTables());
+		$datasets = $db->getDatasets();
 	}
 	catch(DBException $e)
 	{
@@ -216,13 +216,6 @@
 				<th>Erste Fahrt</th>
 				<th>Letzte Fahrt</th>
 				<th>Import-Status</th>
-				<th>Anzahl<br>VUs</th>
-				<th>Anzahl<br>Verkehrstage</th>
-				<th>Anzahl<br>Tagesausnahmen</th>
-				<th>Anzahl<br>Routen</th>
-				<th>Anzahl<br>Halte</th>
-				<th>Anzahl<br>Haltezeiten</th>
-				<th>Anzahl<br>Fahrten</th>
 				<th></th>
 			</tr>
 			<?php if($datasets) { foreach($datasets as $dataset) { ?>
@@ -235,13 +228,6 @@
 					<td><?= $dataset["start_date"] ? $dataset["start_date"] : "" ?></td>
 					<td><?= $dataset["end_date"] ? $dataset["end_date"] : "" ?></td>
 					<td><?= GTFSConstants::IMPORT_STATES[$dataset["import_state"]] ?></td>
-					<td><?= isset($dataset["counts"]["agency"]) ? $dataset["counts"]["agency"] : "" ?></td>
-					<td><?= isset($dataset["counts"]["calendar"]) ? $dataset["counts"]["calendar"] : "" ?></td>
-					<td><?= isset($dataset["counts"]["calendar_dates"]) ? $dataset["counts"]["calendar_dates"] : "" ?></td>
-					<td><?= isset($dataset["counts"]["routes"]) ? $dataset["counts"]["routes"] : "" ?></td>
-					<td><?= isset($dataset["counts"]["stops"]) ? $dataset["counts"]["stops"] : "" ?></td>
-					<td><?= isset($dataset["counts"]["stop_times"]) ? $dataset["counts"]["stop_times"] : "" ?></td>
-					<td><?= isset($dataset["counts"]["trips"]) ? $dataset["counts"]["trips"] : "" ?></td>
 					<td>
 						<button onclick="deleteDataset(this, <?= $dataset["dataset_id"] ?>)">löschen</button>
 						<button onclick="openLog(<?= $dataset["dataset_id"] ?>)">Log</button>
@@ -285,7 +271,8 @@
 					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_FILES_READ ?>" />Daten einlesen</label>
 					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_FILTERED ?>" />Daten einlesen + filtern</label>
 					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_REFINED ?>" />Daten einlesen + filtern + verarbeiten</label>
-					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_COMPLETE ?>" checked />Daten einlesen + filtern + verarbeiten + übernehmen</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_APPLIED ?>" checked />Daten einlesen + filtern + verarbeiten + übernehmen</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_COMPLETE ?>" checked />Daten einlesen + filtern + verarbeiten + übernehmen + aufräumen</label>
 
 					<div class="button">
 						<button type="submit" onclick="setButtonProgress(this, 'wird ausgeführt...')">Import starten</button>
@@ -310,7 +297,8 @@
 					<p>Laufoptionen:</p>
 					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_FILTERED ?>" />Daten filtern</label>
 					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_REFINED ?>" />Daten filtern + verarbeiten</label>
-					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_COMPLETE ?>" checked />Daten filtern + verarbeiten + übernehmen</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_APPLIED ?>" checked />Daten filtern + verarbeiten + übernehmen</label>
+					<label><input type="radio" name="runUntil" value="<?= GTFSConstants::IMPORT_STATE_COMPLETE ?>" checked />Daten filtern + verarbeiten + übernehmen + aufräumen</label>
 
 					<div class="button">
 						<button type="submit" onclick="setButtonProgress(this, 'wird ausgeführt...')">Import wiederaufnehmen</button>
