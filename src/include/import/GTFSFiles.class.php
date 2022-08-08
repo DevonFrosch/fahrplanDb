@@ -4,6 +4,8 @@ require_once("ImportException.class.php");
 
 class GTFSFiles
 {
+	public const FILES = ["agency", "calendar", "calendar_dates", "stops", "routes", "trips", "stop_times"];
+	
 	public static function getFileOptions(string $fileName) : GTFSFileOptions
 	{
 		switch($fileName)
@@ -90,6 +92,17 @@ class GTFSFiles
 				]);
 		}
 		throw new ImportException("GTFSFiles: Datei $fileName unbekannt");
+	}
+	
+	public static function getTables() : array
+	{
+		$tables = [];
+		foreach(self::FILES as $file)
+		{
+			$options = self::getFileOptions($file);
+			$tables[] = $options->getTableName();
+		}
+		return $tables;
 	}
 }
 

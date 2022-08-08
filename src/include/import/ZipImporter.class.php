@@ -31,6 +31,7 @@ abstract class ZipImporter extends Importer
 
 			$files[$file->getFilename()] = $file;
 		}
+		krsort($files);
 		return $files;
 	}
 

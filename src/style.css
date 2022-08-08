@@ -22,14 +22,15 @@
 
 html,
 select {
+	font-family: sans-serif;
 	background-color: var(--color-background);
 	color: var(--color-foreground);
 }
-:link {
-	color: var(--color-link);
-}
-:link:active {
+* a:active {
 	color: var(--color-link-active);
+}
+:visited, :link {
+	color: var(--color-link);
 }
 
 table.data {

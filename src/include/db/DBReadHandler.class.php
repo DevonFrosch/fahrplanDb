@@ -8,7 +8,7 @@ class DBReadHandler extends DBHandler
 
 	public const MAX_ROWS = 1500;
 
-	public function getDatasets(bool $withCounts = false) : array
+	public function getDatasets(bool $withCounts = false, array $tableNames = []) : array
 	{
 		$sql = "SELECT * FROM datasets";
 		$datasets = $this->query($sql);
@@ -16,19 +16,31 @@ class DBReadHandler extends DBHandler
 		if($withCounts)
 		{
 			$counts = [];
-			foreach(self::TABLES as $tableName)
+			foreach($tableNames as $tableName)
 			{
 				$tableCounts = $this->getTableCounts($tableName);
 				foreach($tableCounts as $datasetId => $count)
 				{
 					$counts[$datasetId][$tableName] = $count;
 				}
+				$importCounts = $this->getTableCounts($this->getImportTableName($tableName));
+				foreach($importCounts as $datasetId => $count)
+				{
+					if(!isset($counts[$datasetId][$tableName]))
+					{
+						$counts[$datasetId][$tableName] = 0;
+					}
+					$counts[$datasetId][$tableName] += $count;
+				}
 			}
 
 			foreach($datasets as $i => $dataset)
 			{
 				$datasetId = $dataset["dataset_id"];
-				$datasets[$i]["counts"] = $counts[$datasetId];
+				if(isset($counts[$datasetId]))
+				{
+					$datasets[$i]["counts"] = $counts[$datasetId];
+				}
 			}
 		}
 
@@ -44,6 +56,25 @@ class DBReadHandler extends DBHandler
 			return $result[0];
 		}
 		return null;
+	}
+
+	public function getLastLogPath(int $datasetId) : ?string
+	{
+		try
+		{
+			$path = $this->queryValue("
+				SELECT last_logfile
+				FROM datasets
+				WHERE dataset_id = :datasetId
+				LIMIT 1", [
+				":datasetId" => $datasetId,
+			]);
+			return $path;
+		}
+		catch(DBException $e)
+		{
+			return null;
+		}
 	}
 
 	public function getMarginDates(int $datasetId) : array
@@ -80,6 +111,24 @@ class DBReadHandler extends DBHandler
 		catch(DBException $e)
 		{
 			return false;
+		}
+	}
+
+	public function getImportState(int $datasetId) : ?string
+	{
+		try
+		{
+			$importState = $this->queryValue("
+				SELECT import_state
+				FROM `datasets`
+				WHERE `dataset_id` = :dataset_id", [
+				":dataset_id" => $datasetId,
+			]);
+			return $importState;
+		}
+		catch(DBException $e)
+		{
+			return null;
 		}
 	}
 

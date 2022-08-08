@@ -5,17 +5,133 @@ require_once("GTFSFiles.class.php");
 
 class GTFSImporter extends ZipImporter
 {
-	public const GTFS_FILES = ["agency", "calendar", "calendar_dates", "stops", "routes", "trips", "stop_times"];
+	var $runUntil = null;
 
-
-	function __construct(DBHandler $db, string $importPath, string $cachePath, string $logPath)
+	public function __construct(DBHandler $db, string $importPath, string $cachePath, string $logPath)
 	{
 		parent::__construct($db, $importPath, $cachePath, $logPath);
 	}
 
+	private function setRunUntil(string $runUntil) : void
+	{
+		if($runUntil === null)
+		{
+			$this->runUntil = null;
+			return;
+		}
+		if(!GTFSConstants::isImportState($runUntil))
+		{
+			$this->abort("shouldStop: Invalider runUntil '".$runUntil."'");
+			return;
+		}
+		$this->runUntil = $runUntil;
+	}
+
+	public function startImport(string $datasetName, string $license, ?string $referenceDate, string $desc,
+	SplFileInfo $file, ?string $runUntil) : GTFSImporter
+	{
+		$this->addDataset(trim($_POST["name"]), $license, $referenceDate, $desc);
+		$this->setRunUntil($runUntil);
+		return $this->stepReadFiles($file);
+	}
+	public function resumeImport(int $datasetId, ?string $runUntil) : GTFSImporter
+	{
+		$this->setDatasetId($datasetId);
+		$this->setRunUntil($runUntil);
+		$importState = $this->getImportState();
+
+		switch($importState)
+		{
+			case GTFSConstants::IMPORT_STATE_INIT:
+				return $this->stepReadFiles();
+			case GTFSConstants::IMPORT_STATE_FILES_READ:
+				return $this->stepFilter();
+			case GTFSConstants::IMPORT_STATE_FILTERED:
+				return $this->stepRefine();
+			case GTFSConstants::IMPORT_STATE_REFINED:
+				return $this->stepFinish();
+		}
+		$this->finish();
+		return $this;
+	}
+	private function shouldStop(string $currentState) : bool
+	{
+		if(!GTFSConstants::isImportState($currentState))
+		{
+			$this->abort("shouldStop: Invalider currentState '$currentState'");
+			return true;
+		}
+		if($this->runUntil === null)
+		{
+			$this->log("shouldStop: null");
+			return false;
+		}
+
+		return GTFSConstants::hasReachedState($currentState, $this->runUntil);
+	}
+
+	private function stepReadFiles(SplFileInfo $file) : GTFSImporter
+	{
+		if($this->shouldStop(GTFSConstants::IMPORT_STATE_INIT))
+		{
+			$this->finish(false);
+			return $this;
+		}
+
+		$this->extractZipFile($file);
+		$this->importFiles();
+		$this->setImportState(GTFSConstants::IMPORT_STATE_FILES_READ);
+
+		return $this->stepFilter();
+	}
+
+	private function stepFilter() : GTFSImporter
+	{
+		if($this->shouldStop(GTFSConstants::IMPORT_STATE_FILES_READ))
+		{
+			$this->finish(false);
+			return $this;
+		}
+
+		$this->removeExtractedFiles();
+		$this->removeRouteTypeClasses([GTFSConstants::ROUTE_TYPE_CLASS_BUS, GTFSConstants::ROUTE_TYPE_CLASS_OTHER]);
+		$this->removeUnusedData();
+		$this->setImportState(GTFSConstants::IMPORT_STATE_FILTERED);
+
+		return $this->stepRefine();
+	}
+	private function stepRefine() : GTFSImporter
+	{
+		if($this->shouldStop(GTFSConstants::IMPORT_STATE_FILTERED))
+		{
+			$this->finish();
+			return $this;
+		}
+
+		$this->markParentStops();
+		$this->setDatasetDates();
+		$this->setImportState(GTFSConstants::IMPORT_STATE_REFINED);
+
+		return $this->stepFinish();
+	}
+	private function stepFinish() : GTFSImporter
+	{
+		if($this->shouldStop(GTFSConstants::IMPORT_STATE_REFINED))
+		{
+			$this->finish();
+			return $this;
+		}
+
+		$this->copyImportData();
+		$this->setImportState(GTFSConstants::IMPORT_STATE_COMPLETE);
+		$this->finish();
+		return $this;
+	}
+
+	// --------------- Arbeit ---------------
 	public function setDatasetId(int $datasetId) : GTFSImporter
 	{
-		$this->datasetId = $datasetId;
+		parent::setDatasetId($datasetId);
 		return $this;
 	}
 
@@ -33,7 +149,7 @@ class GTFSImporter extends ZipImporter
 
 		try
 		{
-			$this->datasetId = $this->db->duplicateDataset($oldDatasetId, $name);
+			parent::setDatasetId($this->db->duplicateDataset($oldDatasetId, $name));
 
 			if($this->datasetId === null)
 			{
@@ -41,7 +157,7 @@ class GTFSImporter extends ZipImporter
 			}
 			$this->log("Neues Dataset $name angelegt, id ".$this->datasetId.".");
 
-			foreach(self::GTFS_FILES as $file)
+			foreach(GTFSFiles::FILES as $file)
 			{
 				$fileOptions = GTFSFiles::getFileOptions($file);
 				$tableName = $fileOptions->getTableName();
@@ -87,7 +203,7 @@ class GTFSImporter extends ZipImporter
 
 		if($files === null)
 		{
-			$files = self::GTFS_FILES;
+			$files = GTFSFiles::FILES;
 		}
 
 		$this->log("Importiere folgende Dateien: [".join(", ", $files)."]");
@@ -257,6 +373,7 @@ class GTFSImporter extends ZipImporter
 	{
 		if(!$this->isRunning())
 		{
+			$this->log("not running");
 			return $this;
 		}
 		if($this->datasetId === null)
@@ -266,23 +383,22 @@ class GTFSImporter extends ZipImporter
 
 		if($files === null)
 		{
-			$files = self::GTFS_FILES;
+			$files = GTFSFiles::FILES;
 		}
+
+		$this->log("files: ".json_encode($files));
 
 		foreach($files as $file)
 		{
 			$fileOptions = GTFSFiles::getFileOptions($file);
-			if(!$this->doesFileExist($file))
-			{
-				continue;
-			}
 
 			try
 			{
 				$tableName = $fileOptions->getTableName();
+				$importTableName = $this->db->getImportTableName($tableName);
 				$columns = array_merge($fileOptions->getMandatoryFields(), $fileOptions->getOptionalFields());
 
-				$importCount = $this->db->getTableCount($this->db->getImportTableName($tableName), $this->datasetId);
+				$importCount = $this->db->getTableCount($importTableName, $this->datasetId);
 				if($importCount === null || $importCount == 0)
 				{
 					$this->log("Keine vorhandenen Einträge für $tableName gefunden, wird übersprungen.");
@@ -291,7 +407,11 @@ class GTFSImporter extends ZipImporter
 				{
 					$this->log("Übernehme $tableName...");
 					$count = $this->db->copyFromImportTable($tableName, $columns);
-					$this->log("$count von $importCount Einträgen aus $tableName übernommen.");
+					$percent = $importCount !== 0 ? $count / $importCount : 0;
+					$this->log("$count von $importCount Einträgen aus $tableName übernommen ($percent%).");
+					
+					$this->log("Lösche temporäre Daten aus $importTableName...");
+					$this->db->deleteData($importTableName, $this->datasetId);
 				}
 			}
 			catch(DBException $e)
@@ -369,5 +489,18 @@ class GTFSImporter extends ZipImporter
 		}
 
 		$this->log("Importieren von $fileName abgeschlossen.");
+	}
+
+	function deleteDependendData() : void
+	{
+		foreach(GTFSFiles::getTables() as $tableName)
+		{
+			$this->log("Lösche $tableName...");
+			$this->db->deleteData($tableName, $this->datasetId);
+
+			$importTableName = $this->db->getImportTableName($tableName);
+			$this->log("Lösche $importTableName...");
+			$this->db->deleteData($importTableName, $this->datasetId);
+		}
 	}
 }

@@ -7,17 +7,6 @@ class DBHandler
 	protected $pdo = null;
 	protected $queryLogger = null;
 
-	const TABLES = [
-		"agency",
-		"calendar",
-		"calendar_dates",
-		"datasets",
-		"routes",
-		"stops",
-		"stop_times",
-		"trips",
-	];
-
 	public function __construct(array $dbConfig)
 	{
 		try

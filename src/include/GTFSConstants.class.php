@@ -67,6 +67,13 @@ class GTFSConstants
 		self::IMPORT_STATE_REFINED => "Daten verarbeitet",
 		self::IMPORT_STATE_COMPLETE => "Abgeschlossen",
 	];
+	public const IMPORT_STATE_COMPARE = [
+		self::IMPORT_STATE_INIT => 0,
+		self::IMPORT_STATE_FILES_READ => 1,
+		self::IMPORT_STATE_FILTERED => 2,
+		self::IMPORT_STATE_REFINED => 3,
+		self::IMPORT_STATE_COMPLETE => 4,
+	];
 
 	public static function getRouteTypeName(int $type): string
 	{
@@ -114,5 +121,12 @@ class GTFSConstants
 	public static function isImportState(string $importState) : bool
 	{
 		return in_array($importState, array_keys(self::IMPORT_STATES));
+	}
+	public static function hasReachedState(string $currentState, string $untilState) : bool
+	{
+		$current = GTFSConstants::IMPORT_STATE_COMPARE[$currentState];
+		$until = GTFSConstants::IMPORT_STATE_COMPARE[$untilState];
+
+		return $current >= $until;
 	}
 }

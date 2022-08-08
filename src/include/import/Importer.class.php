@@ -39,6 +39,10 @@ abstract class Importer
 			}
 		});
 	}
+	public function getLogPath() :  string
+	{
+		return $this->logFile;
+	}
 	// Programmfluss
 	public function finish() : void
 	{
@@ -114,7 +118,7 @@ abstract class Importer
 		try
 		{
 			$this->db->addDataset($name, $license, $referenceDate, $desc);
-			$this->datasetId = $this->db->lastInsertId();
+			$this->setDatasetId($this->db->lastInsertId());
 
 			if($this->datasetId === null)
 			{
@@ -128,6 +132,12 @@ abstract class Importer
 		{
 			$this->abort("Fehler beim Anlegen von Dataset $name.", $e);
 		}
+	}
+
+	function deleteDependendData() : void
+	{
+		// Wird von Unterklassen überschrieben
+		return;
 	}
 
 	public function deleteDataset() : ZipImporter
@@ -144,23 +154,10 @@ abstract class Importer
 		{
 			$this->log("Lösche Dataset ".$this->datasetId."...");
 
-			$this->log("Lösche stop_times...");
-			$this->db->deleteData("stop_times", $this->datasetId);
-			$this->log("Lösche stops...");
-			$this->db->deleteData("stops", $this->datasetId);
-			$this->log("Lösche trips...");
-			$this->db->deleteData("trips", $this->datasetId);
-			$this->log("Lösche routes...");
-			$this->db->deleteData("routes", $this->datasetId);
-			$this->log("Lösche calendar...");
-			$this->db->deleteData("calendar", $this->datasetId);
-			$this->log("Lösche calendar_dates...");
-			$this->db->deleteData("calendar_dates", $this->datasetId);
-			$this->log("Lösche agency...");
-			$this->db->deleteData("agency", $this->datasetId);
+			$this->deleteDependendData();
+
 			$this->log("Lösche datasets...");
 			$this->db->deleteData("datasets", $this->datasetId);
-
 			$this->log("Dataset ".$this->datasetId." gelöscht.");
 			$this->finish();
 			return $this;
@@ -178,8 +175,13 @@ abstract class Importer
 	public function setDatasetId(int $datasetId)
 	{
 		$this->datasetId = $datasetId;
+		$this->db->setLastLogFile($this->datasetId, $this->logFile);
 	}
-	
+
+	public function getImportState() : string
+	{
+		return $this->db->getImportState($this->datasetId);
+	}
 	public function setImportState(string $importState) : void
 	{
 		$this->db->setImportState($this->datasetId, $importState);

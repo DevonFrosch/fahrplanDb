@@ -79,7 +79,7 @@
 					$referenceDate = $_POST["reference_date"];
 				}
 
-				import($importer, trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile, $_POST["runUntil"]);
+				$importer->startImport(trim($_POST["name"]), $license, $referenceDate, $desc, $chosenFile, $_POST["runUntil"]);
 			}
 		}
 		catch(ImportException $e)
@@ -91,7 +91,21 @@
 	if(isset($_POST["action"]) && $_POST["action"] === "resume"
 		&& isset($_POST["datasetId"]) && is_numeric($_POST["datasetId"]))
 	{
-		// ...
+		try
+		{
+			if(!isset($_POST["runUntil"]) || !GTFSConstants::isImportState($_POST["runUntil"]))
+			{
+				$result[] = ["type" => "error", "msg" => "Laufoption nicht gültig."];
+			}
+			else
+			{
+				$importer->resumeImport($_POST["datasetId"], $_POST["runUntil"]);
+			}
+		}
+		catch(ImportException $e)
+		{
+			$result[] = ["type" => "error", "msg" => "Fehler beim Import, Log beachten", "exception" => $e];
+		}
 	}
 
 	if(isset($_POST["action"]) && $_POST["action"] === "copyDataset"
@@ -122,7 +136,7 @@
 	$datasets = [];
 	try
 	{
-		$datasets = $db->getDatasets(true);
+		$datasets = $db->getDatasets(true, GTFSFiles::getTables());
 	}
 	catch(DBException $e)
 	{
@@ -130,10 +144,7 @@
 	}
 
 	$resumableDatasets = array_filter($datasets, function($dataset) {
-		return in_array($dataset["import_state"], [
-			GTFSConstants::IMPORT_STATE_FILES_READ,
-			GTFSConstants::IMPORT_STATE_FILTERED,
-		]);
+		return $dataset["import_state"] !== GTFSConstants::IMPORT_STATE_COMPLETE;
 	});
 ?>
 <!DOCTYPE html>
@@ -184,6 +195,10 @@
 					throw error;
 				}
 			}
+			
+			const openLog = (datasetId) => {
+				window.open("logs.php?datasetId="+datasetId, "logs", "popup");
+			}
 		</script>
 	</head>
 	<body>
@@ -229,6 +244,7 @@
 					<td><?= isset($dataset["counts"]["trips"]) ? $dataset["counts"]["trips"] : "" ?></td>
 					<td>
 						<button onclick="deleteDataset(this, <?= $dataset["dataset_id"] ?>)">löschen</button>
+						<button onclick="openLog(<?= $dataset["dataset_id"] ?>)">Log</button>
 					</td>
 				</tr>
 			<?php }} else { ?>

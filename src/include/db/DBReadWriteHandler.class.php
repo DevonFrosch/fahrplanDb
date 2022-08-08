@@ -52,8 +52,11 @@ class DBReadWriteHandler extends DBReadHandler
 				SELECT :newDatasetId, `".join("`, `", $columns)."`
 				FROM `$tableName`
 				WHERE `dataset_id` = :oldDatasetId";
+		
+		$this->disableKeys($tableName);
 		$this->logQuery($sql, $params);
 		$rowCount = $this->execute($sql, $params);
+		$this->enableKeys($tableName);
 		return $rowCount;
 	}
 
@@ -64,6 +67,17 @@ class DBReadWriteHandler extends DBReadHandler
 				WHERE `dataset_id` = :dataset_id";
 		$rowCount = $this->execute($sql, [
 			":import_state" => $importState,
+			":dataset_id" => $datasetId,
+		]);
+	}
+
+	public function setLastLogFile(int $datasetId, string $path) : void
+	{
+		$sql = "UPDATE `datasets`
+				SET `last_logfile` = :last_logfile
+				WHERE `dataset_id` = :dataset_id";
+		$rowCount = $this->execute($sql, [
+			":last_logfile" => $path,
 			":dataset_id" => $datasetId,
 		]);
 	}
@@ -223,6 +237,11 @@ class DBReadWriteHandler extends DBReadHandler
 		$this->execute("ALTER TABLE `$importTableName`
 						ADD INDEX IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` (`".self::EXCLUSION_COLUMN_NAME."`)");
 		return $importTableName;
+	}
+	public function tableExists(string $tableName) : bool
+	{
+		$rowCount = $this->execute("SHOW TABLE STATUS WHERE NAME LIKE :tableName");
+		return $rowCount > 0;
 	}
 
 	public function exclude(string $tableName, int $datasetId, string $reason, string $condition = "1=1", array $params = []) : int
