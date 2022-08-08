@@ -52,7 +52,7 @@ class DBReadWriteHandler extends DBReadHandler
 				SELECT :newDatasetId, `".join("`, `", $columns)."`
 				FROM `$tableName`
 				WHERE `dataset_id` = :oldDatasetId";
-		
+
 		$this->disableKeys($tableName);
 		$this->logQuery($sql, $params);
 		$rowCount = $this->execute($sql, $params);

@@ -11,6 +11,7 @@
 	$stopId = HtmlHelper::getStringParameter("stop");
 	$nameFilter = HtmlHelper::getStringParameter("name");
 	$date = HtmlHelper::getStringParameter("date");
+	$filterEmpty = HtmlHelper::getCheckboxParameter("filterEmpty");
 
 	$db = getDBReadWriteHandler();
 
@@ -28,7 +29,7 @@
 
 	try
 	{
-		$stops = $db->getStops($datasetId, $stopId, $nameFilter, $date);
+		$stops = $db->getStops($datasetId, $stopId, $nameFilter, $date, $filterEmpty);
 
 		if(sizeof($stops) > $db::MAX_ROWS)
 		{
@@ -48,6 +49,12 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Daten für das Dataset", "exception" => $e];
 	}
+
+	$additionalParameters = [
+		"stop" => $stopId,
+		"name" => $nameFilter,
+		"filterEmpty" => $filterEmpty
+	];
 ?>
 <!DOCTYPE html>
 <html>
@@ -65,8 +72,9 @@
 		<?= HtmlHelper::resultBlock($result); ?>
 
 		<?= HtmlHelper::stopHtml($stop) ?>
-		<?= HtmlHelper::dateSelect($marginDates, ["stop" => $stopId, "name" => $nameFilter]) ?>
-		<?= HtmlHelper::nameFilter(["stop" => $stopId]) ?>
+		<?= HtmlHelper::dateSelect($marginDates, $additionalParameters) ?>
+		<?= HtmlHelper::nameFilter($additionalParameters) ?>
+		<?= HtmlHelper::checkboxFilter("filterEmpty", "Filtere Halte ohne Daten", $additionalParameters) ?>
 
 		<table class="data">
 			<thead>

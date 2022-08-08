@@ -195,7 +195,7 @@
 					throw error;
 				}
 			}
-			
+
 			const openLog = (datasetId) => {
 				window.open("logs.php?datasetId="+datasetId, "logs", "popup");
 			}

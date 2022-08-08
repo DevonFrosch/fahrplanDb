@@ -184,7 +184,7 @@ class DBReadHandler extends DBHandler
 				AND st.stop_id = s.stop_id
 				$additionalWhere";
 	}
-	public function getStops(int $datasetId, ?string $parentStopId = null, ?string $nameFilter = null, ?string $date = null) : array
+	public function getStops(int $datasetId, ?string $parentStopId = null, ?string $nameFilter = null, ?string $date = null, ?bool $filterEmpty = false) : array
 	{
 		$params = [":datasetId" => $datasetId];
 		$sql = "
@@ -199,7 +199,8 @@ class DBReadHandler extends DBHandler
 					AND s2.parent_station = s.stop_id
 				) children_count
 			FROM stops s
-			WHERE dataset_id = :datasetId";
+			WHERE dataset_id = :datasetId
+			".($filterEmpty ? "HAVING (stop_time_count > 0 OR children_count > 0)" : "");
 
 		if($date !== null)
 		{

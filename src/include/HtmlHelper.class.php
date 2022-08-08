@@ -28,6 +28,10 @@ class HtmlHelper
 		}
 		return $default;
 	}
+	public static function getCheckboxParameter(string $name) : ?bool
+	{
+		return isset($_REQUEST[$name]);
+	}
 
 	public static function getChosenDatasetId() : int
 	{
@@ -117,25 +121,46 @@ class HtmlHelper
 		$html[] = "</div>";
 		return join(PHP_EOL, $html);
 	}
+	public static function checkboxFilter(string $name, string $description, array $additionalParams = []) : string
+	{
+		$value = self::getCheckboxParameter($name);
 
-	public static function addDefaultParams(array $params, array $skip) : array
+		$html = [];
+		$html[] = "<div class='dateSelect'>";
+			$html[] = "<form action='' method='GET'>";
+				$html[] = "<label>$description:";
+					$html[] = "<input type='checkbox' disabled ".($value ? "checked" : "").">";
+					if(!$value)
+					{
+						$html[] = "<input type='hidden' name='$name' value=''>";
+					}
+				$html[] = "</label>";
+				$html[] = "<button type='submit'>ändern</button>";
+				$html[] = self::getHiddenParams($additionalParams, [$name]);
+			$html[] = "</form>";
+		$html[] = "</div>";
+		return join(PHP_EOL, $html);
+	}
+
+	public static function modifyParams(array $params, array $skip) : array
 	{
 		$default = [
 			"dataset" => self::getNumericParameter("dataset"),
 			"date" => self::getStringParameter("date"),
 		];
-		foreach($default as $key => $value)
+		$params = array_merge($default, $params);
+		foreach($params as $key => $value)
 		{
-			if(!isset($params[$key]) && !in_array($key, $skip))
+			if(in_array($key, $skip))
 			{
-				$params[$key] = $value;
+				unset($params[$key]);
 			}
 		}
 		return $params;
 	}
 	public static function getLink(string $target, string $text, array $additionalParams = [], array $skipDefaultParams = []) : string
 	{
-		$additionalParams = self::addDefaultParams($additionalParams, $skipDefaultParams);
+		$additionalParams = self::modifyParams($additionalParams, $skipDefaultParams);
 		$params = [];
 		foreach($additionalParams as $name => $value)
 		{
@@ -153,11 +178,11 @@ class HtmlHelper
 	}
 	public static function getHiddenParams(array $additionalParams = [], array $skipDefaultParams = []) : string
 	{
-		$additionalParams = self::addDefaultParams($additionalParams, $skipDefaultParams);
+		$additionalParams = self::modifyParams($additionalParams, $skipDefaultParams);
 		$html = [];
 		foreach($additionalParams as $name => $value)
 		{
-			if($value !== null && $value !== "")
+			if($value !== null && $value !== "" && $value !== false)
 			{
 				$html[] = "<input type='hidden' name='$name' value='".htmlspecialchars($value)."'>";
 			}
