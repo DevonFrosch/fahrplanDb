@@ -253,6 +253,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$sql = "UPDATE `$importTableName`
 				SET `".self::EXCLUSION_COLUMN_NAME."` = :reason
 				WHERE `dataset_id` = :datasetId
+				AND `".self::EXCLUSION_COLUMN_NAME."` IS NULL
 				AND $condition";
 
 		$this->logQuery($sql, $params);

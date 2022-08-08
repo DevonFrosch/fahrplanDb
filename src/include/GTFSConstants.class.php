@@ -54,17 +54,19 @@ class GTFSConstants
 		3 => "Allgemeiner Ort",
 		4 => "Einstiegsbereich",
 	];
-	
+
 	public const IMPORT_STATE_INIT = "INIT";
 	public const IMPORT_STATE_FILES_READ = "FILES_READ";
 	public const IMPORT_STATE_FILTERED = "FILTERED";
 	public const IMPORT_STATE_REFINED = "REFINED";
+	public const IMPORT_STATE_APPLIED = "APPLIED";
 	public const IMPORT_STATE_COMPLETE = "COMPLETE";
 	public const IMPORT_STATES = [
 		self::IMPORT_STATE_INIT => "Initialisierung",
 		self::IMPORT_STATE_FILES_READ => "Dateien eingelesen",
 		self::IMPORT_STATE_FILTERED => "Daten gefiltert",
 		self::IMPORT_STATE_REFINED => "Daten verarbeitet",
+		self::IMPORT_STATE_APPLIED => "Daten übernommen",
 		self::IMPORT_STATE_COMPLETE => "Abgeschlossen",
 	];
 	public const IMPORT_STATE_COMPARE = [
@@ -72,7 +74,8 @@ class GTFSConstants
 		self::IMPORT_STATE_FILES_READ => 1,
 		self::IMPORT_STATE_FILTERED => 2,
 		self::IMPORT_STATE_REFINED => 3,
-		self::IMPORT_STATE_COMPLETE => 4,
+		self::IMPORT_STATE_APPLIED => 4,
+		self::IMPORT_STATE_COMPLETE => 5,
 	];
 
 	public static function getRouteTypeName(int $type): string
@@ -117,7 +120,7 @@ class GTFSConstants
 		}
 		return "Unbekannt ($locationType)";
 	}
-	
+
 	public static function isImportState(string $importState) : bool
 	{
 		return in_array($importState, array_keys(self::IMPORT_STATES));

@@ -175,7 +175,15 @@ abstract class Importer
 	public function setDatasetId(int $datasetId)
 	{
 		$this->datasetId = $datasetId;
-		$this->db->setLastLogFile($this->datasetId, $this->logFile);
+		try
+		{
+			$this->db->setLastLogFile($this->datasetId, $this->logFile);
+		}
+		catch(PDOException $e)
+		{
+			// Fehler ist nicht kritisch
+			$this->log("Datenbankfehler beim Setzten des Pfads der Logdatei");
+		}
 	}
 
 	public function getImportState() : string
