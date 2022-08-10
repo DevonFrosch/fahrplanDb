@@ -186,6 +186,14 @@ class DBReadWriteHandler extends DBReadHandler
 		return $this->exclude($tableName, $datasetId, $reason, $condition, []);
 	}
 
+	public function cleanupDataWithoutReference(string $tableName) : int
+	{
+		return $this->execute("
+			DELETE FROM `$tableName`
+			WHERE dataset_id NOT IN (SELECT dataset_id FROM datasets);
+		");
+	}
+
 	public function deleteData(string $tableName, int $datasetId, string $condition = "1=1", array $params = [], int $chunkedDelete = 0) : int
 	{
 		if(empty($condition))

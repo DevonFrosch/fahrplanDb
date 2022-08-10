@@ -462,6 +462,43 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 
+	public function clearDataWithoutDataset() : GTFSImporter
+	{
+		if(!$this->isRunning())
+		{
+			return $this;
+		}
+
+		try
+		{
+			$this->log("Lösche Daten ohne Datensatz");
+
+			foreach(GTFSFiles::FILES as $file)
+			{
+				$fileOptions = GTFSFiles::getFileOptions($file);
+				$tableName = $fileOptions->getTableName();
+				$importTableName = $this->db->getImportTableName($tableName);
+
+				$this->log("Räume $tableName auf...");
+				$count = $this->db->cleanupDataWithoutReference($tableName);
+				$this->log("Fertig, $count Einträge.");
+
+				if($importTableName)
+				{
+					$this->log("Räume $importTableName auf...");
+					$count = $this->db->cleanupDataWithoutReference($importTableName);
+					$this->log("Fertig, $count Einträge.");
+				}
+			}
+
+			return $this;
+		}
+		catch(DBException $e)
+		{
+			$this->abort("Fehler beim Kopieren von datasetId $oldDatasetId.", $e);
+		}
+	}
+
 	protected function removeTempData() : GTFSImporter
 	{
 		if(!$this->isRunning())

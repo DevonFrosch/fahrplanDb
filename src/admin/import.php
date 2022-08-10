@@ -163,6 +163,10 @@
 				getAjax(self, "clearCache");
 			}
 
+			const clearDataWithoutDataset = async (self) => {
+				getAjax(self, "clearDataWithoutDataset");
+			}
+
 			const getAjax = async (button, action, data) => {
 				setButtonProgress(button, "in Arbeit...");
 
@@ -347,6 +351,7 @@
 				<h3>Wartung</h3>
 				<div class="button">
 					<button onclick="clearCache(this)">Cache aufräumen</button>
+					<button onclick="clearDataWithoutDataset(this)">Daten ohne Datensatz löschen</button>
 				</div>
 			</div>
 		</div>

@@ -50,6 +50,20 @@
 				{
 					return ["error" => "Fehler beim Löschen.", "exception" => $e->getLongMessage()];
 				}
+			case "clearDataWithoutDataset":
+				try
+				{
+					$importer->clearDataWithoutDataset();
+					return ["result" => "Daten ohne Datensatz gelöscht."];
+				}
+				catch(DBException $e)
+				{
+					return ["error" => "Fehler beim Löschen von Daten ohne Datensatz.", "exception" => $e->getLongMessage()];
+				}
+				catch(ImportException $e)
+				{
+					return ["error" => "Fehler beim Löschen von Daten ohne Datensatz.", "exception" => $e->getLongMessage()];
+				}
 			default:
 				return ["error" => "Aktion nicht erkannt."];
 		}
