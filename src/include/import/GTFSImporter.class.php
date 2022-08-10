@@ -7,7 +7,7 @@ class GTFSImporter extends ZipImporter
 {
 	var $runUntil = null;
 
-	public function __construct(DBHandler $db, string $importPath, string $cachePath, string $logPath)
+	public function __construct(GTFSDBHandler $db, string $importPath, string $cachePath, string $logPath)
 	{
 		parent::__construct($db, $importPath, $cachePath, $logPath);
 	}
@@ -288,7 +288,7 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 
-	public function markParentStops() : GTFSImporter
+	protected function markParentStops() : GTFSImporter
 	{
 		if(!$this->isRunning())
 		{
@@ -305,7 +305,7 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 
-	public function setDatasetDates() : GTFSImporter
+	protected function setDatasetDates() : GTFSImporter
 	{
 		if(!$this->isRunning())
 		{
@@ -329,7 +329,7 @@ class GTFSImporter extends ZipImporter
 		return $this;
 	}
 
-	public function removeUnusedData(int $runCount = 0) : GTFSImporter
+	protected function removeUnusedData(int $runCount = 0) : GTFSImporter
 	{
 		if(!$this->isRunning())
 		{

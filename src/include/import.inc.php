@@ -1,10 +1,10 @@
 <?php
 
-require_once("db/DBReadWriteHandler.class.php");
+require_once("db/GTFSDBHandler.class.php");
 require_once("import/GTFSImporter.class.php");
 require_once("GTFSConstants.class.php");
 
-function getGTFSImporter(DBReadWriteHandler $db, ?string $importDesc = null) : GTFSImporter
+function getGTFSImporter(GTFSDBHandler $db, ?string $importDesc = null) : GTFSImporter
 {
 	require("config.php");
 	$importPaths = $config["importPaths"];

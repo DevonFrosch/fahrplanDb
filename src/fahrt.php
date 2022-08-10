@@ -1,7 +1,6 @@
 <?php
 	require_once("include/global.inc.php");
 	require_once("include/HtmlHelper.class.php");
-	require_once("include/db/DBReadHandler.class.php");
 	require_once("include/GTFSConstants.class.php");
 
 	$datasetId = HtmlHelper::getChosenDatasetId();
@@ -13,7 +12,7 @@
 	$tripId = HtmlHelper::getStringParameter("trip");
 	$date = HtmlHelper::getStringParameter("date");
 
-	$db = getDBReadWriteHandler();
+	$db = getGTFSDBHandler();
 
 	if($tripId !== null)
 	{

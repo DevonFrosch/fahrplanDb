@@ -15,7 +15,7 @@ abstract class Importer
 
 	protected $datasetId = null;
 
-	function __construct(DBHandler $db, string $logPath, ?string $importDesc = null)
+	function __construct(DBReadWriteHandler $db, string $logPath, ?string $importDesc = null)
 	{
 		$this->db = $db;
 		$this->logPath = $logPath;

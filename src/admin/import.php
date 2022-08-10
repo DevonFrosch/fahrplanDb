@@ -1,6 +1,5 @@
 <?php
 	require_once("../include/global.inc.php");
-	require_once("../include/import.inc.php");
 	require_once("../include/HtmlHelper.class.php");
 
 	function printResult(array $result) : string
@@ -25,7 +24,7 @@
 		}
 	}
 
-	$db = getDBReadWriteHandler();
+	$db = getGTFSDBHandler();
 	$importer = getGTFSImporter($db, "import");
 	$files = $importer->getImportFiles();
 	$result = [];

@@ -1,9 +1,8 @@
 <?php
 	require_once("include/global.inc.php");
 	require_once("include/HtmlHelper.class.php");
-	require_once("include/db/DBReadHandler.class.php");
 
-	$db = getDBReadWriteHandler();
+	$db = getGTFSDBHandler();
 
 	$result = [];
 	$datasets = [];

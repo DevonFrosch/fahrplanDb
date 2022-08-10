@@ -11,7 +11,7 @@ abstract class ZipImporter extends Importer
 
 	protected $extractPath = null;
 
-	function __construct(DBHandler $db, string $importPath, string $cachePath, string $logPath)
+	function __construct(DBReadWriteHandler $db, string $importPath, string $cachePath, string $logPath)
 	{
 		parent::__construct($db, $logPath);
 

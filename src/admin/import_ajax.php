@@ -2,7 +2,6 @@
 	header("Content-Type: application/json");
 
 	require_once("../include/global.inc.php");
-	require_once("../include/import.inc.php");
 	require_once("../include/import/ImportException.class.php");
 
 	function action() : array
@@ -12,7 +11,7 @@
 			return ["error" => "Keine Aktion gewählt."];
 		}
 
-		$db = getDBReadWriteHandler();
+		$db = getGTFSDBHandler();
 		$importer = getGTFSImporter($db, "ajax");
 
 		switch($_REQUEST["action"])

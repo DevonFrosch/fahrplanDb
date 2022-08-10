@@ -6,7 +6,7 @@
 		die("Falsche ID");
 	}
 
-	$db = getDBReadWriteHandler();
+	$db = getGTFSDBHandler();
 	$path = $db->getLastLogPath($_GET["datasetId"]);
 
 	if($path === null || !file_exists($path))
