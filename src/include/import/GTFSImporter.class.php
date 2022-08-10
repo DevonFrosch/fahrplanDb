@@ -186,6 +186,7 @@ class GTFSImporter extends ZipImporter
 
 				if($includeImportTables && $importTableName)
 				{
+					$fields[] = "importExclusion";
 					$this->log("Kopiere $importTableName...");
 					$count = $this->db->copyDatasetData($oldDatasetId, $this->datasetId, $importTableName, $fields);
 					$this->log("Fertig, $count Einträge.");
@@ -343,47 +344,47 @@ class GTFSImporter extends ZipImporter
 		try
 		{
 			$this->log("Lösche ungültige routes...");
-			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup", [["agency_id", "agency", "agency_id"]]);
+			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup $runCount", [["agency_id", "agency", "agency_id"]]);
 			$this->log("$count ungültige routes markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche ungültige trips...");
-			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup", [["route_id", "routes", "route_id"]]);
+			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup $runCount", [["route_id", "routes", "route_id"]]);
 			$this->log("$count ungültige trips markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche ungültige stop_times...");
-			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup", [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], true);
+			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup $runCount", [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], true);
 			$this->log("$count gültige stop_times behalten.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte stops...");
-			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
+			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse $runCount", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
 			$this->log("$count unbenutzte stops markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte trips...");
-			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup reverse", [["trip_id", "stop_times", "trip_id"]]);
+			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup reverse $runCount", [["trip_id", "stop_times", "trip_id"]]);
 			$this->log("$count unbenutzte trips markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte routes...");
-			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup reverse", [["route_id", "trips", "route_id"]]);
+			$count = $this->db->cleanupTable("routes", $this->datasetId, "routes cleanup reverse $runCount", [["route_id", "trips", "route_id"]]);
 			$this->log("$count unbenutzte routes markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte Kalenderdaten...");
-			$count = $this->db->cleanupTable("calendar", $this->datasetId, "calendar cleanup reverse", [["service_id", "trips", "service_id"]]);
+			$count = $this->db->cleanupTable("calendar", $this->datasetId, "calendar cleanup reverse $runCount", [["service_id", "trips", "service_id"]]);
 			$this->log("$count unbenutzte agencies markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte Kalenderausnahmen...");
-			$count = $this->db->cleanupTable("calendar_dates", $this->datasetId, "calendar_dates cleanup reverse", [["service_id", "trips", "service_id"]]);
+			$count = $this->db->cleanupTable("calendar_dates", $this->datasetId, "calendar_dates cleanup reverse $runCount", [["service_id", "trips", "service_id"]]);
 			$this->log("$count unbenutzte Kalenderausnahmen markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte agencies...");
-			$count = $this->db->cleanupTable("agency", $this->datasetId, "agencies cleanup reverse", [["agency_id", "routes", "agency_id"]]);
+			$count = $this->db->cleanupTable("agency", $this->datasetId, "agencies cleanup reverse $runCount", [["agency_id", "routes", "agency_id"]]);
 			$this->log("$count unbenutzte agencies markiert.");
 			$totalCount += $count;
 		}

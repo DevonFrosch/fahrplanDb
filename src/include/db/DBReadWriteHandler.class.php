@@ -53,10 +53,8 @@ class DBReadWriteHandler extends DBReadHandler
 				FROM `$tableName`
 				WHERE `dataset_id` = :oldDatasetId";
 
-		$this->disableKeys($tableName);
 		$this->logQuery($sql, $params);
 		$rowCount = $this->execute($sql, $params);
-		$this->enableKeys($tableName);
 		return $rowCount;
 	}
 
