@@ -4,6 +4,7 @@ require_once("DBReadHandler.class.php");
 
 class DBReadWriteHandler extends DBReadHandler
 {
+	const EXCLUDED_COLUMN_NAME = "importExcluded";
 	const EXCLUSION_COLUMN_NAME = "importExclusion";
 	const DATASET_COLUMNS = ["dataset_name", "import_time", "reference_date", "desc", "license", "start_date", "end_date", "import_state"];
 
@@ -168,7 +169,7 @@ class DBReadWriteHandler extends DBReadHandler
 			$conditionParts[] = "NOT EXISTS (
 					SELECT 1 FROM `".$this->getImportTableName($ref[1])."` a
 					WHERE a.dataset_id = :datasetId
-					AND a.`".self::EXCLUSION_COLUMN_NAME."` IS NULL
+					AND a.`".self::EXCLUDED_COLUMN_NAME."` IS FALSE
 					AND a.`".$ref[2]."` = `".$this->getImportTableName($tableName)."`.`".$ref[0]."`
 					LIMIT 1
 				)";
@@ -198,34 +199,32 @@ class DBReadWriteHandler extends DBReadHandler
 		{
 			throw new DBException("Datenbankfehler: Kann nicht ohne Bedingung löschen.");
 		}
+		if(!$this->tableExists($tableName))
+		{
+			return 0;
+		}
 
-		$this->disableKeys($tableName);
 		$rowCount = 0;
 		$params[":datasetId"] = $datasetId;
-		try
+		$sql = "DELETE FROM `$tableName` WHERE dataset_id = :datasetId AND $condition";
+		if($chunkedDelete > 0)
 		{
-			$sql = "DELETE FROM `$tableName` WHERE dataset_id = :datasetId AND $condition";
+			$sql .= " LIMIT $chunkedDelete";
+		}
+
+		do
+		{
+			$info = null;
 			if($chunkedDelete > 0)
 			{
-				$sql .= " LIMIT $chunkedDelete";
+				$info = "Bereits $rowCount gelöscht.";
 			}
-			do
-			{
-				$info = null;
-				if($chunkedDelete > 0)
-				{
-					$info = "Bereits $rowCount gelöscht.";
-				}
-				$this->logQuery($sql, $params, $info);
-				$count = $this->execute($sql, $params);
-				$rowCount += $count;
-			}
-			while($chunkedDelete > 0 && $count > 0);
+			$this->logQuery($sql, $params, $info);
+			$count = $this->execute($sql, $params);
+			$rowCount += $count;
 		}
-		finally
-		{
-			$this->enableKeys($tableName);
-		}
+		while($chunkedDelete > 0 && $count > 0);
+
 		return $rowCount;
 	}
 
@@ -236,17 +235,16 @@ class DBReadWriteHandler extends DBReadHandler
 	public function createImportTable(string $tableName) : string
 	{
 		$importTableName = $this->getImportTableName($tableName);
-		$this->execute("DROP TABLE IF EXISTS `$importTableName`");
-		$this->execute("CREATE TABLE `$importTableName` LIKE `$tableName`");
+		$this->execute("CREATE TABLE IF NOT EXISTS `$importTableName` LIKE `$tableName`");
 		$this->execute("ALTER TABLE `$importTableName`
-						ADD COLUMN IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci'");
-		$this->execute("ALTER TABLE `$importTableName`
-						ADD INDEX IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` (`".self::EXCLUSION_COLUMN_NAME."`)");
+						ADD COLUMN IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` BOOLEAN NOT NULL DEFAULT 0,
+						ADD COLUMN IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`".self::EXCLUDED_COLUMN_NAME."`)");
 		return $importTableName;
 	}
 	public function tableExists(string $tableName) : bool
 	{
-		$rowCount = $this->execute("SHOW TABLE STATUS WHERE NAME LIKE :tableName");
+		$rowCount = $this->execute("SHOW TABLE STATUS WHERE NAME LIKE :tableName", [":tableName" => $tableName]);
 		return $rowCount > 0;
 	}
 
@@ -257,10 +255,13 @@ class DBReadWriteHandler extends DBReadHandler
 		$params[":datasetId"] = $datasetId;
 		$params[":reason"] = $reason;
 		$sql = "UPDATE `$importTableName`
-				SET `".self::EXCLUSION_COLUMN_NAME."` = :reason
+				SET `".self::EXCLUDED_COLUMN_NAME."` = TRUE,
+					`".self::EXCLUSION_COLUMN_NAME."` = :reason
 				WHERE `dataset_id` = :datasetId
-				AND `".self::EXCLUSION_COLUMN_NAME."` IS NULL
-				AND $condition";
+				AND `".self::EXCLUDED_COLUMN_NAME."` IS FALSE
+				AND (
+					$condition
+				)";
 
 		$this->logQuery($sql, $params);
 		$rowCount = $this->execute($sql, $params);
@@ -274,7 +275,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$sql = "INSERT INTO `$tableName` (`".join("`, `", $columns)."`)
 				SELECT `".join("`, `", $columns)."`
 				FROM `$importTableName`
-				WHERE `".self::EXCLUSION_COLUMN_NAME."` IS NULL";
+				WHERE `".self::EXCLUDED_COLUMN_NAME."` IS FALSE";
 		$this->logQuery($sql);
 		$rowCount = $this->execute($sql);
 		return $rowCount;

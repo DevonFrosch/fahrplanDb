@@ -355,7 +355,7 @@ class GTFSImporter extends ZipImporter
 
 			$this->log("Lösche ungültige stop_times...");
 			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup $runCount", [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], true);
-			$this->log("$count gültige stop_times behalten.");
+			$this->log("$count ungültige stop_times markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte stops...");
