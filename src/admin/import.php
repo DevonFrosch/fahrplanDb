@@ -26,7 +26,7 @@
 	}
 
 	$db = getDBReadWriteHandler();
-	$importer = getGTFSImporter($db);
+	$importer = getGTFSImporter($db, "import");
 	$files = $importer->getImportFiles();
 	$result = [];
 

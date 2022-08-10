@@ -13,7 +13,7 @@
 		}
 
 		$db = getDBReadWriteHandler();
-		$importer = getGTFSImporter($db);
+		$importer = getGTFSImporter($db, "ajax");
 
 		switch($_REQUEST["action"])
 		{

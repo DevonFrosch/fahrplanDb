@@ -15,12 +15,12 @@ abstract class Importer
 
 	protected $datasetId = null;
 
-	function __construct(DBHandler $db, string $logPath)
+	function __construct(DBHandler $db, string $logPath, ?string $importDesc = null)
 	{
 		$this->db = $db;
 		$this->logPath = $logPath;
 
-		$this->logFile = $logPath."/".date("Y-m-d_His_").$this->getImportType().".log";
+		$this->logFile = $logPath."/".date("Y-m-d_His_").$this->getImportType().($importDesc !== null ? $importDesc."_" : "").".log";
 	}
 	public abstract static function getImportType() : string;
 
