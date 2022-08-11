@@ -182,7 +182,7 @@ class DBReadWriteHandler extends DBReadHandler
 		}
 		$condition = join($glue, $conditionParts);
 
-		return $this->exclude($tableName, $datasetId, $reason, $condition, []);
+		return $this->exclude($datasetId, $tableName, $reason, $condition, []);
 	}
 
 	public function cleanupDataWithoutReference(string $tableName) : int
@@ -248,7 +248,7 @@ class DBReadWriteHandler extends DBReadHandler
 		return $rowCount > 0;
 	}
 
-	public function exclude(string $tableName, int $datasetId, string $reason, string $condition = "1=1", array $params = []) : int
+	public function exclude(int $datasetId, string $tableName, string $reason, string $condition = "1=1", array $params = []) : int
 	{
 		$importTableName = $this->getImportTableName($tableName);
 
@@ -268,15 +268,16 @@ class DBReadWriteHandler extends DBReadHandler
 		return $rowCount;
 	}
 
-	public function copyFromImportTable(string $tableName, array $columns = []) : int
+	public function copyFromImportTable(int $datasetId, string $tableName, array $columns = []) : int
 	{
 		$importTableName = $this->getImportTableName($tableName);
 		$columns[] = "dataset_id";
 		$sql = "INSERT INTO `$tableName` (`".join("`, `", $columns)."`)
 				SELECT `".join("`, `", $columns)."`
 				FROM `$importTableName`
-				WHERE `".self::EXCLUDED_COLUMN_NAME."` IS FALSE";
-		$this->logQuery($sql);
+				WHERE dataset_id = :dataset_id
+				AND `".self::EXCLUDED_COLUMN_NAME."` IS FALSE";
+		$this->logQuery($sql, [":dataset_id" => $datasetId]);
 		$rowCount = $this->execute($sql);
 		return $rowCount;
 	}

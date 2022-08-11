@@ -276,7 +276,7 @@ class GTFSImporter extends ZipImporter
 					$params = [
 						":routeType" => $routeTypeId,
 					];
-					$count = $this->db->exclude("routes", $this->datasetId, "route type class ".$class, $condition, $params);
+					$count = $this->db->exclude($this->datasetId, "routes", "route type class ".$class, $condition, $params);
 					$this->log("$count Routen markiert.");
 				}
 			}
@@ -450,7 +450,7 @@ class GTFSImporter extends ZipImporter
 				{
 					$this->log("Übernehme $tableName...");
 					$count = $this->db->copyFromImportTable($tableName, $columns);
-					$percent = $importCount !== 0 ? $count / $importCount : 0;
+					$percent = round($importCount !== 0 ? $count / $importCount : 0, 2);
 					$this->log("$count von $importCount Einträgen aus $tableName übernommen ($percent%).");
 				}
 			}
