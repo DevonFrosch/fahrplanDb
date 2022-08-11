@@ -68,10 +68,8 @@ class GTFSImporter extends ZipImporter
 		}
 		if($this->runUntil === null)
 		{
-			$this->log("shouldStop: null");
 			return false;
 		}
-
 		return GTFSConstants::hasReachedState($currentState, $this->runUntil);
 	}
 
@@ -511,8 +509,6 @@ class GTFSImporter extends ZipImporter
 		{
 			$this->abort("Falsche Reihenfolge, kein Dataset angelegt.");
 		}
-
-		$this->log("files: ".json_encode($files));
 
 		foreach(GTFSFiles::FILES as $file)
 		{
