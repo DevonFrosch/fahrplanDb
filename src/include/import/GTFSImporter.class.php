@@ -562,8 +562,8 @@ class GTFSImporter extends ZipImporter
 				if($fileOptions->markOptionalFieldAsFound($field))
 				{
 					$columns[] = "@".$field;
-					$sets[$field] = "IF(@$field <> '', @$field, :$field)";
-					$params[":$field"] = $fileOptions->getDefaultForField($field);
+					$sets[$field] = "IF(@$field <> '', @$field, :default_$field)";
+					$params[":default_$field"] = $fileOptions->getDefaultForField($field);
 				}
 				else
 				{
