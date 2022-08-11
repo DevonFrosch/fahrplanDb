@@ -20,7 +20,6 @@
 	<head>
 		<title>Log <?= basename($path); ?></title>
 		<link rel="stylesheet" type="text/css" href="../style.css" />
-		<meta http-equiv="refresh" content="10" />
 		<style type="text/css">
 			body, html {
 				margin: 0;
@@ -33,8 +32,30 @@
 				overflow: auto;
 			}
 		</style>
+		<script type="text/javascript">
+			let timer = null;
+
+			const onLoad = () => {
+				document.querySelector('body').scrollIntoView(false);
+				toggleTimer();
+			}
+
+			const toggleTimer = () => {
+				const checkbox = document.getElementById("reload");
+				if(timer !== null) {
+					clearTimeout(timer);
+					timer = null;
+				}
+				else {
+					timer = setTimeout(() => window.location.reload(), 10 * 1000);
+				}
+				document.getElementById("reload").checked = (timer !== null);
+				return false;
+			}
+		</script>
 	</head>
-	<body onload="document.querySelector('body').scrollIntoView(false);">
+	<body onload="onLoad()">
 		<pre><?php readfile($path); ?></pre>
+		<label><input type="checkbox" onclick="toggleTimer()" id="reload"> Automatischer Reload</label>
 	</body>
 </html>
