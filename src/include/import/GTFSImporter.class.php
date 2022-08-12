@@ -114,7 +114,7 @@ class GTFSImporter extends ZipImporter
 		$this->setDatasetDates();
 		$this->setImportState(GTFSConstants::IMPORT_STATE_REFINED);
 
-		return $this->stepFinish();
+		return $this->stepApply();
 	}
 	private function stepApply() : GTFSImporter
 	{
