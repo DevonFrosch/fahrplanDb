@@ -278,7 +278,7 @@ class DBReadWriteHandler extends DBReadHandler
 				WHERE dataset_id = :dataset_id
 				AND `".self::EXCLUDED_COLUMN_NAME."` IS FALSE";
 		$this->logQuery($sql, [":dataset_id" => $datasetId]);
-		$rowCount = $this->execute($sql);
+		$rowCount = $this->execute($sql, [":dataset_id" => $datasetId]);
 		return $rowCount;
 	}
 }

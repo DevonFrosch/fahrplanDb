@@ -447,7 +447,7 @@ class GTFSImporter extends ZipImporter
 				else
 				{
 					$this->log("Übernehme $tableName...");
-					$count = $this->db->copyFromImportTable($tableName, $columns);
+					$count = $this->db->copyFromImportTable($this->datasetId, $tableName, $columns);
 					$percent = round($importCount !== 0 ? $count / $importCount : 0, 2);
 					$this->log("$count von $importCount Einträgen aus $tableName übernommen ($percent%).");
 				}
