@@ -70,7 +70,12 @@ class GTFSImporter extends ZipImporter
 		{
 			return false;
 		}
-		return GTFSConstants::hasReachedState($currentState, $this->runUntil);
+		$shouldStop = GTFSConstants::hasReachedState($currentState, $this->runUntil);
+		if($shouldStop)
+		{
+			$this->log("Status ist $currentState, runUntil ist ".$this->runUntil.", unterbreche");
+		}
+		return $shouldStop;
 	}
 
 	private function stepReadFiles(SplFileInfo $file) : GTFSImporter
@@ -584,19 +589,20 @@ class GTFSImporter extends ZipImporter
 		$this->abort("$fileName enthält Spalten [".join(", ", $missing)."] nicht, breche ab.");
 		}
 
+		$count = 0;
 		try
 		{
 			$filePath = realpath($this->getFilePath($fileName));
 			$eol = $this->detectEOL($filePath);
 			$importTableName = $this->db->getImportTableName($fileOptions->getTableName());
-			$this->db->loadData($filePath, $eol, $importTableName, $columns, $sets, $params);
+			$count = $this->db->loadData($filePath, $eol, $importTableName, $columns, $sets, $params);
 		}
 		catch(DBException $e)
 		{
 			$this->abort("Datenbankfehler beim Lesen von $fileName", $e);
 		}
 
-		$this->log("Importieren von $fileName abgeschlossen.");
+		$this->log("Importieren von $fileName abgeschlossen, $count Einträge.");
 	}
 
 	function deleteDependendData() : void
@@ -604,11 +610,13 @@ class GTFSImporter extends ZipImporter
 		foreach(GTFSFiles::getTables() as $tableName)
 		{
 			$this->log("Lösche $tableName...");
-			$this->db->deleteData($tableName, $this->datasetId);
+			$count = $this->db->deleteData($tableName, $this->datasetId);
+			$this->log("$count gelöscht.");
 
 			$importTableName = $this->db->getImportTableName($tableName);
 			$this->log("Lösche $importTableName...");
-			$this->db->deleteData($importTableName, $this->datasetId);
+			$count = $this->db->deleteData($importTableName, $this->datasetId);
+			$this->log("$count gelöscht.");
 		}
 	}
 }

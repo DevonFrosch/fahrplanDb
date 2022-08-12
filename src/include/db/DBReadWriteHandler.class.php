@@ -125,7 +125,7 @@ class DBReadWriteHandler extends DBReadHandler
 		return $errors;
 	}
 
-	public function loadData(string $fileName, string $eol, string $tableName, array $columns, array $sets, array $params = null) : void
+	public function loadData(string $fileName, string $eol, string $tableName, array $columns, array $sets, array $params = null) : int
 	{
 		if(!$this->pdo)
 		{
@@ -152,7 +152,7 @@ class DBReadWriteHandler extends DBReadHandler
 		}
 
 		$this->logQuery($sql, $params);
-		$this->execute($sql, $params);
+		return $this->execute($sql, $params);
 	}
 
 	public function cleanupTable(string $tableName, int $datasetId, string $reason, array $references, bool $useOR = false) : int
