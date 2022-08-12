@@ -126,7 +126,7 @@ class GTFSImporter extends ZipImporter
 
 		$this->copyImportData();
 		$this->setImportState(GTFSConstants::IMPORT_STATE_APPLIED);
-		return $this;
+		return $this->stepFinish();
 	}
 	private function stepFinish() : GTFSImporter
 	{
