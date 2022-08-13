@@ -10,7 +10,10 @@
 	$stopTimes = [];
 
 	$tripId = HtmlHelper::getStringParameter("trip");
-	$date = HtmlHelper::getStringParameter("date");
+	$filters = [
+		"trip" => $tripId,
+		"date" => HtmlHelper::getStringParameter("date"),
+	];
 
 	$db = getGTFSDBHandler();
 
@@ -63,7 +66,7 @@
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
 
-		<?= HtmlHelper::dateSelect($marginDates, ["trip" => $tripId]) ?>
+		<?= HtmlHelper::dateSelect($marginDates, $filters) ?>
 
 		<?php if($trip) { ?>
 		<table class="data addBottomMargin">

@@ -10,7 +10,14 @@
 	$stopTimes = [];
 
 	$stopId = HtmlHelper::getStringParameter("stop");
-	$date = HtmlHelper::getStringParameter("date");
+	$filters = [
+		"stop" => $stopId,
+		"date" => HtmlHelper::getStringParameter("date"),
+		"short_name" => HtmlHelper::getStringParameter("short_name"),
+		"headsign" => HtmlHelper::getStringParameter("headsign"),
+		"agency_name" => HtmlHelper::getStringParameter("agency_name"),
+		"route_short_name" => HtmlHelper::getStringParameter("route_short_name"),
+	];
 
 	$db = getGTFSDBHandler();
 
@@ -27,7 +34,7 @@
 
 		try
 		{
-			$stopTimes = $db->getStopTimesStop($datasetId, $stopId, $date);
+			$stopTimes = $db->getStopTimesStop($datasetId, $stopId, $filters);
 
 			if(sizeof($stopTimes) > $db::MAX_ROWS)
 			{
@@ -71,7 +78,11 @@
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
 
-		<?= HtmlHelper::dateSelect($marginDates, ["stop" => $stopId]) ?>
+		<?= HtmlHelper::dateSelect($marginDates, $filters) ?>
+		<?= HtmlHelper::textFilter("short_name", "Zugnummer", $filters) ?>
+		<?= HtmlHelper::textFilter("headsign", "Ziel", $filters) ?>
+		<?= HtmlHelper::textFilter("agency_name", "Betreiber", $filters) ?>
+		<?= HtmlHelper::textFilter("route_short_name", "Linie", $filters) ?>
 
 		<?php if($stop) { ?>
 		<?= HtmlHelper::stopHtml($stop) ?>
@@ -81,12 +92,11 @@
 				<tr>
 					<th>Fahrt-ID</th>
 					<th>Zugnummer</th>
+					<th>Linie</th>
 					<th>Ziel</th>
 					<th>an</th>
 					<th>ab</th>
 					<th>Betreiber</th>
-					<th>Betreiber-ID</th>
-					<th>Linie</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -94,12 +104,11 @@
 				<tr>
 					<td><?= HtmlHelper::getLink("fahrt", $stopTime["trip_id"], ["trip" => $stopTime["trip_id"]]) ?></td>
 					<td><?= $stopTime["trip_short_name"] ?></td>
+					<td><?= $stopTime["route_short_name"] ?></td>
 					<td><?= $stopTime["trip_headsign"] ?></td>
 					<td><?= $stopTime["arrival_time"] ?></td>
 					<td><?= $stopTime["departure_time"] ?></td>
 					<td><?= $stopTime["agency_name"] ?></td>
-					<td><?= $stopTime["agency_id"] ?></td>
-					<td><?= $stopTime["route_short_name"] ?></td>
 				</tr>
 				<?php } if(empty($stopTimes)) { ?>
 					<tr><td colspan="8" class="nodata">Keine Halte</td></tr>

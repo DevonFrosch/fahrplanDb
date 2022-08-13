@@ -8,9 +8,13 @@
 	$stops = [];
 
 	$stopId = HtmlHelper::getStringParameter("stop");
-	$nameFilter = HtmlHelper::getStringParameter("name");
-	$date = HtmlHelper::getStringParameter("date");
-	$filterEmpty = HtmlHelper::getCheckboxParameter("filterEmpty");
+	$filters = [
+		"stop" => $stopId,
+		"date" => HtmlHelper::getStringParameter("date"),
+		"name" => HtmlHelper::getStringParameter("name"),
+		"code" => HtmlHelper::getStringParameter("code"),
+		"filterEmpty" => HtmlHelper::getCheckboxParameter("filterEmpty"),
+	];
 
 	$db = getGTFSDBHandler();
 
@@ -28,7 +32,7 @@
 
 	try
 	{
-		$stops = $db->getStops($datasetId, $stopId, $nameFilter, $date, $filterEmpty);
+		$stops = $db->getStops($datasetId, $stopId, $filters);
 
 		if(sizeof($stops) > $db::MAX_ROWS)
 		{
@@ -48,12 +52,6 @@
 	{
 		$result[] = ["type" => "error", "msg" => "Fehler beim Holen der Daten für das Dataset", "exception" => $e];
 	}
-
-	$additionalParameters = [
-		"stop" => $stopId,
-		"name" => $nameFilter,
-		"filterEmpty" => $filterEmpty
-	];
 ?>
 <!DOCTYPE html>
 <html>
@@ -71,9 +69,10 @@
 		<?= HtmlHelper::resultBlock($result); ?>
 
 		<?= HtmlHelper::stopHtml($stop) ?>
-		<?= HtmlHelper::dateSelect($marginDates, $additionalParameters) ?>
-		<?= HtmlHelper::nameFilter($additionalParameters) ?>
-		<?= HtmlHelper::checkboxFilter("filterEmpty", "Filtere Halte ohne Daten", $additionalParameters) ?>
+		<?= HtmlHelper::dateSelect($marginDates, $filters) ?>
+		<?= HtmlHelper::textFilter("code", "Code", $filters) ?>
+		<?= HtmlHelper::textFilter("name", "Name", $filters) ?>
+		<?= HtmlHelper::checkboxFilter("filterEmpty", "Filtere Halte ohne Daten", $filters) ?>
 
 		<table class="data">
 			<thead>

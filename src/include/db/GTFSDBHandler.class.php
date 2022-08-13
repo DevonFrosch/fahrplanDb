@@ -97,13 +97,13 @@ class GTFSDBHandler extends DBReadWriteHandler
 				AND st.stop_id = s.stop_id
 				$additionalWhere";
 	}
-	public function getStops(int $datasetId, ?string $parentStopId = null, ?string $nameFilter = null, ?string $date = null, ?bool $filterEmpty = false) : array
+	public function getStops(int $datasetId, ?string $parentStopId = null, array $filters = []) : array
 	{
 		$params = [":datasetId" => $datasetId];
 		$sql = "
 			SELECT s.*,
 				(
-					".$this->tripCountQuery($date)."
+					".$this->tripCountQuery($filters["date"])."
 				) stop_time_count,
 				(
 					SELECT COUNT(*)
@@ -112,19 +112,25 @@ class GTFSDBHandler extends DBReadWriteHandler
 					AND s2.parent_station = s.stop_id
 				) children_count
 			FROM stops s
-			WHERE dataset_id = :datasetId
-			".($filterEmpty ? "HAVING (stop_time_count > 0 OR children_count > 0)" : "");
+			WHERE dataset_id = :datasetId";
 
-		if($date !== null)
+		if(isset($filters["date"]) && $filters["date"] !== null)
 		{
-			$params[":date"] = $date;
+			$params[":date"] = $filters["date"];
 		}
 
-		if($nameFilter !== null)
+		if(isset($filters["name"]) && $filters["name"] !== null)
 		{
 			$sql .= "
 				AND stop_name LIKE :nameFilter";
-			$params[":nameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $nameFilter)."%";
+			$params[":nameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["name"])."%";
+		}
+
+		if(isset($filters["code"]) && $filters["code"] !== null)
+		{
+			$sql .= "
+				AND stop_code LIKE :codeFilter";
+			$params[":codeFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["code"])."%";
 		}
 
 		if($parentStopId !== null)
@@ -139,7 +145,11 @@ class GTFSDBHandler extends DBReadWriteHandler
 				AND (parent_station IS NULL OR parent_station = '')";
 		}
 
-
+		if(isset($filters["filterEmpty"]) && $filters["filterEmpty"])
+		{
+			$sql .= "
+				HAVING (stop_time_count > 0 OR children_count > 0)";
+		}
 
 		$sql .= "
 			ORDER BY s.stop_name ASC, s.platform_code ASC, s.stop_id ASC
@@ -178,9 +188,9 @@ class GTFSDBHandler extends DBReadWriteHandler
 		]);
 	}
 
-	public function getRoutes(int $datasetId, ?string $agencyId = null, ?string $date = null) : array
+	public function getRoutes(int $datasetId, ?string $agencyId = null, array $filters = []) : array
 	{
-		self::checkDate($date);
+		self::checkDate($filters);
 
 		$additionalJoin = "";
 		$additionalWhere = "";
@@ -188,7 +198,7 @@ class GTFSDBHandler extends DBReadWriteHandler
 			":datasetId" => $datasetId,
 		];
 
-		if($date !== null)
+		if(isset($filters["date"]) && $filters["date"] !== null)
 		{
 			$additionalWhere .= "
 				AND EXISTS (
@@ -209,7 +219,7 @@ class GTFSDBHandler extends DBReadWriteHandler
 						OR IFNULL(cd.exception_type, 0) = '1'
 					)
 				)";
-			$params[":date"] = $date;
+			$params[":date"] = $filters["date"];
 		}
 
 		if($agencyId !== null)
@@ -254,9 +264,9 @@ class GTFSDBHandler extends DBReadWriteHandler
 		return null;
 	}
 
-	public function getTrips(int $datasetId, string $routeId, ?string $date = null, string $direction = "") : array
+	public function getTrips(int $datasetId, string $routeId, array $filters = []) : array
 	{
-		self::checkDate($date);
+		self::checkDate($filters);
 
 		$additionalJoin = "";
 		$additionalWhere = "";
@@ -265,14 +275,14 @@ class GTFSDBHandler extends DBReadWriteHandler
 			":routeId" => $routeId,
 		];
 
-		if($date !== null)
+		if(isset($filters["date"]) && $filters["date"] !== null)
 		{
 			$additionalJoin .= "
 				LEFT JOIN calendar c
 					ON c.dataset_id = t.dataset_id
 					AND c.service_id = t.service_id
 					AND :date BETWEEN c.start_date AND c.end_date
-					AND ".self::getWeekdayCondition($date)."
+					AND ".self::getWeekdayCondition($filters["date"])."
 				LEFT JOIN calendar_dates cd
 					ON cd.dataset_id = t.dataset_id
 					AND cd.service_id = t.service_id
@@ -282,20 +292,27 @@ class GTFSDBHandler extends DBReadWriteHandler
 					(c.service_id IS NOT NULL AND IFNULL(cd.exception_type, 0) <> '2')
 					OR IFNULL(cd.exception_type, 0) = '1'
 				)";
-			$params[":date"] = $date;
+			$params[":date"] = $filters["date"];
 		}
 
-		if($direction === "0" || $direction === "1")
+		if(isset($filters["direction"]) && ($filters["direction"] === "0" || $filters["direction"] === "1"))
 		{
 			$additionalWhere .= "
 				AND t.direction_id = :direction";
-			$params[":direction"] = $direction;
+			$params[":direction"] = $filters["direction"];
+		}
+
+		if(isset($filters["short_name"]) && $filters["short_name"] !== null)
+		{
+			$additionalWhere .= "
+				AND t.trip_short_name LIKE :shortNameFilter";
+			$params[":shortNameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["short_name"])."%";
 		}
 
 		$sql = "
 			SELECT t.*,
-				s1.stop_name AS start, s1.platform_code start_platform_code, st1.departure_time,
-				s2.stop_name AS dest, s2.platform_code dest_platform_code, st2.arrival_time
+				s1.stop_name AS start, s1.platform_code AS start_platform_code, st1.departure_time,
+				s2.stop_name AS dest, s2.platform_code AS dest_platform_code, st2.arrival_time
 			FROM trips t
 			LEFT JOIN stop_times st1
 				ON st1.dataset_id = t.dataset_id
@@ -366,9 +383,9 @@ class GTFSDBHandler extends DBReadWriteHandler
 		]);
 	}
 
-	public function getStopTimesStop(int $datasetId, string $stopId, ?string $date = null) : array
+	public function getStopTimesStop(int $datasetId, string $stopId, array $filters = []) : array
 	{
-		self::checkDate($date);
+		self::checkDate($filters);
 
 		$additionalJoin = "";
 		$additionalWhere = "";
@@ -377,14 +394,14 @@ class GTFSDBHandler extends DBReadWriteHandler
 			":stopId" => $stopId,
 		];
 
-		if($date !== null)
+		if(isset($filters["date"]) && $filters["date"] !== null)
 		{
 			$additionalJoin .= "
 				LEFT JOIN calendar c
 					ON c.dataset_id = t.dataset_id
 					AND c.service_id = t.service_id
 					AND :date BETWEEN c.start_date AND c.end_date
-					AND ".self::getWeekdayCondition($date)."
+					AND ".self::getWeekdayCondition($filters["date"])."
 				LEFT JOIN calendar_dates cd
 					ON cd.dataset_id = t.dataset_id
 					AND cd.service_id = t.service_id
@@ -394,7 +411,35 @@ class GTFSDBHandler extends DBReadWriteHandler
 					(c.service_id IS NOT NULL AND IFNULL(cd.exception_type, 0) <> '2')
 					OR IFNULL(cd.exception_type, 0) = '1'
 				)";
-			$params[":date"] = $date;
+			$params[":date"] = $filters["date"];
+		}
+
+		if(isset($filters["headsign"]) && $filters["headsign"] !== null)
+		{
+			$additionalWhere .= "
+				AND trip_headsign LIKE :headsignFilter";
+			$params[":headsignFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["headsign"])."%";
+		}
+
+		if(isset($filters["agency_name"]) && $filters["agency_name"] !== null)
+		{
+			$additionalWhere .= "
+				AND agency_name LIKE :agencyNameFilter";
+			$params[":agencyNameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["agency_name"])."%";
+		}
+
+		if(isset($filters["route_short_name"]) && $filters["route_short_name"] !== null)
+		{
+			$additionalWhere .= "
+				AND route_short_name LIKE :routeShortNameFilter";
+			$params[":routeShortNameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["route_short_name"])."%";
+		}
+
+		if(isset($filters["short_name"]) && $filters["short_name"] !== null)
+		{
+			$additionalWhere .= "
+				AND trip_short_name LIKE :shortNameFilter";
+			$params[":shortNameFilter"] = str_replace(["%", "*"], ["\\%", "%"], $filters["short_name"])."%";
 		}
 
 		$sql = "
@@ -421,8 +466,10 @@ class GTFSDBHandler extends DBReadWriteHandler
 		return $this->query($sql, $params);
 	}
 
-	protected static function checkDate(?string $date) : void
+	protected static function checkDate(array $filters) : void
 	{
+		$date = isset($filters["date"]) ? $filters["date"] : null;
+
 		if($date !== null && !preg_match(self::DATE_REGEX, $date))
 		{
 			throw new DBException("Fehlerhafte Datumsangabe.");

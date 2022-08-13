@@ -10,8 +10,12 @@
 	$trips = [];
 
 	$routeId = HtmlHelper::getStringParameter("route");
-	$date = HtmlHelper::getStringParameter("date");
-	$direction = HtmlHelper::getStringParameter("direction", "");
+	$filters = [
+		"route" => $routeId,
+		"date" => HtmlHelper::getStringParameter("date"),
+		"short_name" => HtmlHelper::getStringParameter("short_name"),
+		"direction" => HtmlHelper::getStringParameter("direction", ""),
+	];
 
 	$db = getGTFSDBHandler();
 
@@ -28,7 +32,7 @@
 
 		try
 		{
-			$trips = $db->getTrips($datasetId, $routeId, $date, $direction);
+			$trips = $db->getTrips($datasetId, $routeId, $filters);
 
 			if(sizeof($trips) > $db::MAX_ROWS)
 			{
@@ -66,7 +70,8 @@
 		</div>
 		<?= HtmlHelper::resultBlock($result) ?>
 
-		<?= HtmlHelper::dateSelect($marginDates, ["route" => $routeId]) ?>
+		<?= HtmlHelper::dateSelect($marginDates, $filters) ?>
+		<?= HtmlHelper::textFilter("short_name", "Zugnummer", $filters) ?>
 
 		<?php if($route) { ?>
 		<table class="data addBottomMargin">

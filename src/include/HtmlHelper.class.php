@@ -22,7 +22,7 @@ class HtmlHelper
 	}
 	public static function getStringParameter(string $name, ?string $default = null) : ?string
 	{
-		if(isset($_REQUEST[$name]))
+		if(isset($_REQUEST[$name]) && $_REQUEST[$name] !== "")
 		{
 			return $_REQUEST[$name];
 		}
@@ -94,7 +94,7 @@ class HtmlHelper
 		$endDate = (isset($marginDates[1]) && $marginDates[1] !== null) ? $marginDates[1] : "";
 
 		$html = [];
-		$html[] = "<div class='dateSelect'>";
+		$html[] = "<div class='filter'>";
 			$html[] = "<form action='' method='GET'>";
 				$html[] = "<label>Datum ändern:";
 					$html[] = "<input type='date' min='$startDate' max='$endDate' name='date' value='$currentDate'>";
@@ -105,18 +105,18 @@ class HtmlHelper
 		$html[] = "</div>";
 		return join(PHP_EOL, $html);
 	}
-	public static function nameFilter(array $additionalParams = []) : string
+	public static function textFilter(string $name, string $description, array $additionalParams = []) : string
 	{
-		$name = self::getStringParameter("name", "");
+		$value = self::getStringParameter($name, "");
 
 		$html = [];
-		$html[] = "<div class='dateSelect'>";
+		$html[] = "<div class='filter'>";
 			$html[] = "<form action='' method='GET'>";
-				$html[] = "<label>Name:";
-					$html[] = "<input type='text' name='name' value='$name' title='* für beliebige Zeichen'>";
+				$html[] = "<label>$description:";
+					$html[] = "<input type='text' name='$name' value='$value' title='Platzhalter * für beliebige Zeichen'>";
 				$html[] = "</label>";
 				$html[] = "<button type='submit'>filtern</button>";
-				$html[] = self::getHiddenParams($additionalParams, ["name"]);
+				$html[] = self::getHiddenParams($additionalParams, [$name]);
 			$html[] = "</form>";
 		$html[] = "</div>";
 		return join(PHP_EOL, $html);
@@ -126,16 +126,16 @@ class HtmlHelper
 		$value = self::getCheckboxParameter($name);
 
 		$html = [];
-		$html[] = "<div class='dateSelect'>";
+		$html[] = "<div class='filter'>";
 			$html[] = "<form action='' method='GET'>";
 				$html[] = "<label>$description:";
 					$html[] = "<input type='checkbox' disabled ".($value ? "checked" : "").">";
-					if(!$value)
-					{
-						$html[] = "<input type='hidden' name='$name' value=''>";
-					}
 				$html[] = "</label>";
 				$html[] = "<button type='submit'>ändern</button>";
+				if(!$value)
+				{
+					$html[] = "<input type='hidden' name='$name' value=''>";
+				}
 				$html[] = self::getHiddenParams($additionalParams, [$name]);
 			$html[] = "</form>";
 		$html[] = "</div>";

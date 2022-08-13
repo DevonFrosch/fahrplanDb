@@ -10,7 +10,10 @@
 	$routes = [];
 
 	$agencyId = HtmlHelper::getStringParameter("agency");
-	$date = HtmlHelper::getStringParameter("date");
+	$filters = [
+		"agency" => $agencyId,
+		"date" => HtmlHelper::getStringParameter("date"),
+	];
 
 	$db = getGTFSDBHandler();
 
@@ -27,7 +30,7 @@
 
 	try
 	{
-		$routes = $db->getRoutes($datasetId, $agencyId, $date);
+		$routes = $db->getRoutes($datasetId, $agencyId, $filters);
 
 		if(sizeof($routes) > $db::MAX_ROWS)
 		{
@@ -64,7 +67,7 @@
 		</div>
 		<?= HtmlHelper::resultBlock($result); ?>
 
-		<?= HtmlHelper::dateSelect($marginDates, ["agency" => $agencyId]) ?>
+		<?= HtmlHelper::dateSelect($marginDates, $filters) ?>
 
 		<div class="addBottomMargin">
 			<form action="" method="GET">
