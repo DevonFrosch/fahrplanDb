@@ -166,6 +166,10 @@
 				getAjax(self, "clearDataWithoutDataset");
 			}
 
+			const optimizeImportTables = async (self) => {
+				getAjax(self, "optimizeImportTables");
+			}
+
 			const getAjax = async (button, action, data) => {
 				setButtonProgress(button, "in Arbeit...");
 
@@ -349,8 +353,9 @@
 
 				<h3>Wartung</h3>
 				<div class="button">
-					<button onclick="clearCache(this)">Cache aufräumen</button>
-					<button onclick="clearDataWithoutDataset(this)">Daten ohne Datensatz löschen</button>
+					<button onclick="clearCache(this)">Cache aufräumen</button><br>
+					<button onclick="optimizeImportTables(this)">Import-Tabellen optimieren</button><br>
+					<button onclick="clearDataWithoutDataset(this)">Daten ohne Datensatz löschen</button><br>
 				</div>
 			</div>
 		</div>

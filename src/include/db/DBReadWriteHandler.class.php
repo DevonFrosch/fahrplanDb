@@ -281,4 +281,12 @@ class DBReadWriteHandler extends DBReadHandler
 		$rowCount = $this->execute($sql, [":dataset_id" => $datasetId]);
 		return $rowCount;
 	}
+
+	public function optimizeImportTables(string $table) : void
+	{
+		if($this->tableExists($table))
+		{
+			$this->execute("OPTIMIZE TABLE $table");
+		}
+	}
 }

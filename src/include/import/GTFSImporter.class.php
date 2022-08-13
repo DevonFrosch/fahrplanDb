@@ -529,7 +529,30 @@ class GTFSImporter extends ZipImporter
 			}
 			catch(DBException $e)
 			{
-				$this->abort("Datenbankfehler beim Übernehmen der Daten.", $e);
+				$this->abort("Datenbankfehler beim Löschen der Import-Daten.", $e);
+			}
+		}
+
+		return $this;
+	}
+
+	public function optimizeImportTables() : GTFSImporter
+	{
+		foreach(GTFSFiles::FILES as $file)
+		{
+			$fileOptions = GTFSFiles::getFileOptions($file);
+
+			try
+			{
+				$tableName = $fileOptions->getTableName();
+				$importTableName = $this->db->getImportTableName($tableName);
+
+				$this->log("Optimiere Tabelle $importTableName...");
+				$this->db->optimizeImportTables($importTableName);
+			}
+			catch(DBException $e)
+			{
+				$this->abort("Datenbankfehler beim Optimieren von Import-Tabellen.", $e);
 			}
 		}
 

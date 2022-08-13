@@ -63,6 +63,20 @@
 				{
 					return ["error" => "Fehler beim Löschen von Daten ohne Datensatz.", "exception" => $e->getLongMessage()];
 				}
+			case "optimizeImportTables":
+				try
+				{
+					$importer->optimizeImportTables();
+					return ["result" => "Import-Tabellen optimiert."];
+				}
+				catch(DBException $e)
+				{
+					return ["error" => "Fehler beim Optimieren der Import-Tabellen.", "exception" => $e->getLongMessage()];
+				}
+				catch(ImportException $e)
+				{
+					return ["error" => "Fehler beim Optimieren der Import-Tabellen.", "exception" => $e->getLongMessage()];
+				}
 			default:
 				return ["error" => "Aktion nicht erkannt."];
 		}
