@@ -24,7 +24,47 @@ class GTFSDBHandler extends DBReadWriteHandler
 		$this->logQuery($sql, $params);
 		return $this->execute($sql, $params);
 	}
-	
+
+	public function firstLastStopForTrips(int $datasetId) : int
+	{
+		if($datasetId < 0)
+		{
+			throw new DBException("Datenbankfehler: datasetId negativ.");
+		}
+		$sql = "
+			UPDATE ".$this->getImportTableName("trips")." t
+			SET t.first_stop = (
+					SELECT st1.stop_id
+					FROM ".$this->getImportTableName("stop_times")." st1
+					WHERE st1.dataset_id = :datasetId
+					AND st1.trip_id = t.trip_id
+					AND st1.stop_sequence = (
+						SELECT MIN(sts1.stop_sequence)
+						FROM ".$this->getImportTableName("stop_times")." sts1
+						WHERE sts1.dataset_id = :datasetId
+						AND sts1.trip_id = t.trip_id
+					)
+					LIMIT 1
+				),
+				t.last_stop = (
+					SELECT st2.stop_id
+					FROM ".$this->getImportTableName("stop_times")." st2
+					WHERE st2.dataset_id = :datasetId
+					AND st2.trip_id = t.trip_id
+					AND st2.stop_sequence = (
+						SELECT MAX(sts2.stop_sequence)
+						FROM ".$this->getImportTableName("stop_times")." sts2
+						WHERE sts2.dataset_id = :datasetId
+						AND sts2.trip_id = t.trip_id
+					)
+					LIMIT 1
+				)
+			WHERE t.dataset_id = :datasetId";
+		$params = [":datasetId" => $datasetId];
+		$this->logQuery($sql, $params);
+		return $this->execute($sql, $params);
+	}
+
 	public function setDatasetDates(int $datasetId) : int
 	{
 		if($datasetId < 0)

@@ -5,7 +5,7 @@ require_once("ImportException.class.php");
 class GTFSFiles
 {
 	public const FILES = ["agency", "calendar", "calendar_dates", "stops", "routes", "trips", "stop_times"];
-	
+
 	public static function getFileOptions(string $fileName) : GTFSFileOptions
 	{
 		switch($fileName)
@@ -30,13 +30,13 @@ class GTFSFiles
 					"friday" => "1",
 					"saturday" => "1",
 					"sunday" => "1",
-				], true);
+				], [], true);
 			case "calendar_dates":
 				return new GTFSFileOptions("calendar_dates", [
 					"service_id",
 					"date",
 					"exception_type",
-				], [], true);
+				], [], [], true);
 			case "stops":
 				return new GTFSFileOptions("stops", [
 					"stop_id",
@@ -49,6 +49,8 @@ class GTFSFiles
 					"location_type" => "0",
 					"parent_station" => null,
 					"platform_code" => null,
+				], [
+					"is_parent",
 				]);
 			case "routes":
 				return new GTFSFileOptions("routes", [
@@ -74,6 +76,9 @@ class GTFSFiles
 					"trip_headsign" => null,
 					"trip_short_name" => null,
 					"block_id" => null,
+				], [
+					"first_stop",
+					"last_stop",
 				]);
 			case "stop_times":
 				return new GTFSFileOptions("stop_times", [
@@ -93,7 +98,7 @@ class GTFSFiles
 		}
 		throw new ImportException("GTFSFiles: Datei $fileName unbekannt");
 	}
-	
+
 	public static function getTables() : array
 	{
 		$tables = [];
@@ -112,16 +117,18 @@ class GTFSFileOptions
 	protected $tableName;
 	protected $mandatoryFields = [];
 	protected $optionalFields = [];
+	protected $additionalFields = [];
 	protected $optional = false;
 
 	protected $mandatoryFieldsFound = [];
 	protected $optionalFieldsFound = [];
 
-	function __construct(string $fileName, array $mandatoryFields, array $optionalFields, bool $optional = false, string $tableName = null)
+	function __construct(string $fileName, array $mandatoryFields, array $optionalFields, array $additionalFields = [], bool $optional = false, string $tableName = null)
 	{
 		$this->fileName = $fileName;
 		$this->mandatoryFields = $mandatoryFields;
 		$this->optionalFields = $optionalFields;
+		$this->additionalFields = $additionalFields;
 		$this->optional = $optional;
 		$this->tableName = $fileName;
 		if($tableName !== null)
@@ -198,10 +205,10 @@ class GTFSFileOptions
 		}
 		return $this->optionalFields[$field];
 	}
-	
-	public function getFields() : array
+
+	public function getAllFields() : array
 	{
-		return array_merge($this->getMandatoryFields(), $this->getOptionalFields());
+		return array_merge($this->getMandatoryFields(), $this->getOptionalFields(), $this->additionalFields);
 	}
 
 	public function isOptional() : bool

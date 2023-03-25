@@ -116,6 +116,7 @@ class GTFSImporter extends ZipImporter
 		}
 
 		$this->markParentStops();
+		$this->firstLastStopForTrips();
 		$this->setDatasetDates();
 		$this->setImportState(GTFSConstants::IMPORT_STATE_REFINED);
 
@@ -181,7 +182,7 @@ class GTFSImporter extends ZipImporter
 				$fileOptions = GTFSFiles::getFileOptions($file);
 				$tableName = $fileOptions->getTableName();
 				$importTableName = $this->db->getImportTableName($tableName);
-				$fields = $fileOptions->getFields();
+				$fields = $fileOptions->getAllFields();
 
 				$this->log("Kopiere $tableName...");
 				$count = $this->db->copyDatasetData($oldDatasetId, $this->datasetId, $tableName, $fields);
@@ -305,6 +306,23 @@ class GTFSImporter extends ZipImporter
 		$this->log("Markiere Stationen, die Unterstationen haben...");
 		$count = $this->db->updateParentStops($this->datasetId);
 		$this->log("$count stops markiert.");
+		return $this;
+	}
+
+	protected function firstLastStopForTrips() : GTFSImporter
+	{
+		if(!$this->isRunning())
+		{
+			return $this;
+		}
+		if($this->datasetId === null)
+		{
+			$this->abort("Falsche Reihenfolge, kein Dataset angelegt.");
+		}
+
+		$this->log("Setzte ersten und letzten Halt für Fahrten...");
+		$count = $this->db->firstLastStopForTrips($this->datasetId);
+		$this->log("$count Fahrten angepasst.");
 		return $this;
 	}
 
