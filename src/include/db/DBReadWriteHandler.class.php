@@ -224,7 +224,7 @@ class DBReadWriteHandler extends DBReadHandler
 		return $rowCount;
 	}
 
-	public function createTable(string $tableName, string $alias = null) : string
+	public function createTable(string $tableName, ?string $alias = null) : string
 	{
 		if($alias == null)
 		{
@@ -243,7 +243,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$resultTableName = $this->execute($sql);
 		return $resultTableName;
 	}
-	public function addIndexForTable(string $tableName, string $alias = null, bool $import = true) : string
+	public function addIndexForTable(string $tableName, ?string $alias = null, bool $import = true) : string
 	{
 		if($alias == null)
 		{
@@ -282,8 +282,18 @@ class DBReadWriteHandler extends DBReadHandler
 	{
 		$importTableName = $this->getImportTableName($tableName);
 		$this->addIndexForTable($tableName, $importTableName);
-		$this->execute("ALTER TABLE `$importTableName`
+		
+		$this->logAndExecute("ALTER TABLE `$importTableName`
 						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`".self::EXCLUDED_COLUMN_NAME."`)");
+		
+		if($tableName == "stop_times")
+		{
+			$this->logAndExecute("ALTER TABLE `$importTableName`
+						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME." + trips` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`, `trip_id`)");
+			$this->logAndExecute("ALTER TABLE `$importTableName`
+						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME." + stops` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`, `stop_id`)");
+		}
+		
 		return $importTableName;
 	}
 	public function tableExists(string $tableName) : bool

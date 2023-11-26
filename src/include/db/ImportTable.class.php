@@ -11,7 +11,7 @@ class ImportTable
 				`agency_timezone` varchar(20) DEFAULT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=COMPACT",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`agency_id`) USING BTREE"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`agency_id`) USING BTREE"
 			]
 		],
 		"calendar" => [
@@ -29,9 +29,9 @@ class ImportTable
 				`end_date` date NOT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`service_id`) USING BTREE",
-				"ADD KEY `start_date` (`dataset_id`,`start_date`,`end_date`) USING BTREE",
-				"ADD KEY `end_date` (`dataset_id`,`end_date`) USING BTREE"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`service_id`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `start_date` (`dataset_id`,`start_date`,`end_date`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `end_date` (`dataset_id`,`end_date`) USING BTREE"
 			]
 		],
 		"calendar_dates" => [
@@ -42,8 +42,8 @@ class ImportTable
 				`exception_type` enum('1','2') NOT NULL COMMENT '1 - Service has been added for the specified date.\r\n2 - Service has been removed for the specified date.'
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`service_id`,`date`) USING BTREE",
-				"ADD KEY `date` (`dataset_id`,`date`) USING BTREE"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`service_id`,`date`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `date` (`dataset_id`,`date`) USING BTREE"
 			]
 		],
 		"datasets" => [
@@ -60,7 +60,7 @@ class ImportTable
 				`last_logfile` varchar(250) DEFAULT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=COMPACT",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`)"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`)"
 			]
 		],
 		"routes" => [
@@ -78,9 +78,9 @@ class ImportTable
 				`continuous_drop_off` enum('0','1','2','3') NOT NULL DEFAULT '1' COMMENT '0 - Continuous stopping drop off.\r\n1 or empty - No continuous stopping drop off.\r\n2 - Must phone agency to arrange continuous stopping drop off.\r\n3 - Must coordinate with driver to arrange continuous stopping drop off. '
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`route_id`) USING BTREE",
-				"ADD KEY `agency` (`dataset_id`,`agency_id`) USING BTREE",
-				"ADD KEY `route_type` (`dataset_id`,`route_type`) USING BTREE"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`route_id`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `agency` (`dataset_id`,`agency_id`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `route_type` (`dataset_id`,`route_type`) USING BTREE"
 			]
 		],
 		"stops" => [
@@ -98,11 +98,11 @@ class ImportTable
 				`is_parent` enum('0','1') NOT NULL DEFAULT '0'
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`stop_id`) USING BTREE",
-				"ADD KEY `stop_name` (`dataset_id`,`stop_name`) USING BTREE",
-				"ADD KEY `stop_code` (`dataset_id`,`stop_code`) USING BTREE",
-				"ADD KEY `location_type` (`dataset_id`,`location_type`) USING BTREE",
-				"ADD KEY `parent_station` (`dataset_id`,`parent_station`) USING BTREE"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`stop_id`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `stop_name` (`dataset_id`,`stop_name`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `stop_code` (`dataset_id`,`stop_code`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `location_type` (`dataset_id`,`location_type`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `parent_station` (`dataset_id`,`parent_station`) USING BTREE"
 			]
 		],
 		"stop_times" => [
@@ -121,13 +121,13 @@ class ImportTable
 				`timepoint` enum('0','1') NOT NULL DEFAULT '1' COMMENT '0 - Times are considered approximate.\r\n1 or empty - Times are considered exact.'
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`trip_id`,`stop_sequence`) USING BTREE",
-				"ADD KEY `stops` (`dataset_id`,`stop_id`) USING BTREE",
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`trip_id`,`stop_sequence`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `stops` (`dataset_id`,`stop_id`) USING BTREE",
 			],
 			"createIndexNonImport" => [
-				"ADD KEY `stop_and_time` (`dataset_id`,`stop_id`,`departure_time`) USING BTREE",
-				"ADD KEY `departure_time` (`dataset_id`,`departure_time`) USING BTREE",
-				"ADD KEY `arrival_time` (`dataset_id`,`arrival_time`) USING BTREE"
+				"ADD KEY IF NOT EXISTS `stop_and_time` (`dataset_id`,`stop_id`,`departure_time`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `departure_time` (`dataset_id`,`departure_time`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `arrival_time` (`dataset_id`,`arrival_time`) USING BTREE"
 			]
 		],
 		"trips" => [
@@ -144,14 +144,14 @@ class ImportTable
 				`last_stop` varchar(50) DEFAULT NULL
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 			"createIndex" => [
-				"ADD PRIMARY KEY (`dataset_id`,`trip_id`) USING BTREE",
-				"ADD KEY `routes` (`dataset_id`,`route_id`) USING BTREE",
-				"ADD KEY `service` (`dataset_id`,`service_id`)"
+				"ADD PRIMARY KEY IF NOT EXISTS (`dataset_id`,`trip_id`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `routes` (`dataset_id`,`route_id`) USING BTREE",
+				"ADD KEY IF NOT EXISTS `service` (`dataset_id`,`service_id`)"
 			]
 		],
 	];
 	
-	public static function getCreateTable(string $tableName, string $alias, bool $ifNotExists = true) : string
+	public static function getCreateTable(string $tableName, ?string $alias, bool $ifNotExists = true) : string
 	{
 		if(!isset(self::TABLES[$tableName]))
 		{
@@ -162,20 +162,38 @@ class ImportTable
 			.self::TABLES[$tableName]["createTable"];
 	}
 	
-	public static function getCreateIndex(string $tableName, string $alias, bool $isImport) : array
+	public static function getCreateIndex(string $tableName, ?string $alias, bool $isImport) : array
 	{
 		if(!isset(self::TABLES[$tableName]))
 		{
 			return null;
 		}
 		
+		$sqls = self::getForIndex($tableName, "createIndex", $alias);
+		
+		if($isImport)
+		{
+			$sqls = array_merge($sqls, self::getForIndex($tableName, "createIndexImport", $alias));
+		}
+		else
+		{
+			$sqls = array_merge($sqls, self::getForIndex($tableName, "createIndexNonImport", $alias));
+		}
+		
+		return $sqls;
+	}
+	
+	private static function getForIndex(string $tableName, string $category, string $alias) : array
+	{
+		if(!isset(self::TABLES[$tableName][$category]))
+		{
+			return [];
+		}
 		$sqls = [];
-		$category = $isImport ? "createIndex" : "createIndexNonImport";
 		foreach(self::TABLES[$tableName][$category] as $sql)
 		{
 			$sqls[] = "ALTER TABLE `$alias` ".$sql;
 		}
-		
 		return $sqls;
 	}
 }

@@ -386,9 +386,15 @@ class GTFSImporter extends ZipImporter
 			$this->log("$count ungültige stop_times ohne stop markiert.");
 			$totalCount += $count;
 
-			$this->log("Lösche unbenutzte stops...");
+			$this->log("Lösche unbenutzte stops (1)...");
 			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse $runCount", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
-			$this->log("$count unbenutzte stops markiert.");
+			$this->log("$count unbenutzte stops (1) markiert.");
+			$totalCount += $count;
+
+			// ein 2. Mal wegen der parent_stops
+			$this->log("Lösche unbenutzte stops (2)...");
+			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse $runCount", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
+			$this->log("$count unbenutzte stops (2) markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte trips...");
@@ -403,7 +409,7 @@ class GTFSImporter extends ZipImporter
 
 			$this->log("Lösche unbenutzte Kalenderdaten...");
 			$count = $this->db->cleanupTable("calendar", $this->datasetId, "calendar cleanup reverse $runCount", [["service_id", "trips", "service_id"]]);
-			$this->log("$count unbenutzte agencies markiert.");
+			$this->log("$count unbenutzte Kalenderdaten markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte Kalenderausnahmen...");
@@ -478,7 +484,7 @@ class GTFSImporter extends ZipImporter
 				{
 					$this->log("Übernehme $tableName...");
 					$count = $this->db->copyFromImportTable($this->datasetId, $tableName, $columns);
-					$percent = round($importCount !== 0 ? $count / $importCount : 0, 2);
+					$percent = round($importCount !== 0 ? $count / $importCount : 0, 2)*100;
 					$this->log("$count von $importCount Einträgen aus $tableName übernommen ($percent%).");
 				}
 			}

@@ -108,6 +108,17 @@ class DBHandler
 		}
 	}
 
+	public function logAndQuery(string $query, ?array $args = null, ?string $additionalInfo = null) : int
+	{
+		$this->logQuery($query, $args, $additionalInfo);
+		return $this->query($query, $args);
+	}
+	public function logAndExecute(string $query, ?array $args = null, ?string $additionalInfo = null) : int
+	{
+		$this->logQuery($query, $args, $additionalInfo);
+		return $this->execute($query, $args);
+	}
+
 	public function disableKeys(string $tableName) : void
 	{
 		$this->execute("ALTER TABLE `$tableName` DISABLE KEYS;");
