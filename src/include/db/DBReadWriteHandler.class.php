@@ -1,6 +1,7 @@
 <?php
 
 require_once("DBReadHandler.class.php");
+require_once("ImportTable.class.php");
 
 class DBReadWriteHandler extends DBReadHandler
 {
@@ -155,7 +156,7 @@ class DBReadWriteHandler extends DBReadHandler
 		return $this->execute($sql, $params);
 	}
 
-	public function cleanupTable(string $tableName, int $datasetId, string $reason, array $references, bool $useOR = false) : int
+	public function cleanupTable(string $tableName, int $datasetId, string $reason, array $references) : int
 	{
 		if(empty($references))
 		{
@@ -175,12 +176,7 @@ class DBReadWriteHandler extends DBReadHandler
 				)";
 		}
 
-		$glue = " AND ";
-		if($useOR)
-		{
-			$glue = " OR ";
-		}
-		$condition = join($glue, $conditionParts);
+		$condition = join(" AND ", $conditionParts);
 
 		return $this->exclude($datasetId, $tableName, $reason, $condition, []);
 	}
@@ -228,6 +224,47 @@ class DBReadWriteHandler extends DBReadHandler
 		return $rowCount;
 	}
 
+	public function createTable(string $tableName, string $alias = null) : string
+	{
+		if($alias == null)
+		{
+			$alias = $tableName;
+		}
+		$sql = ImportTable::getCreateTable($tableName, $alias);
+		
+		if($sql == null)
+		{
+			throw new DBException("Keine Definition zum Erzeugen der Tabelle $tableName gefunden.");
+		}
+		
+		$this->execute("DROP TABLE IF EXISTS `$alias`");
+		
+		$this->logQuery($sql);
+		$resultTableName = $this->execute($sql);
+		return $resultTableName;
+	}
+	public function addIndexForTable(string $tableName, string $alias = null, bool $import = true) : string
+	{
+		if($alias == null)
+		{
+			$alias = $tableName;
+		}
+		$sqls = ImportTable::getCreateIndex($tableName, $alias, $import);
+		
+		if($sqls == null)
+		{
+			throw new DBException("Keine Definition zum Erzeugen der Indexe für $tableName gefunden.");
+		}
+		
+		foreach($sqls as $sql)
+		{
+			$this->logQuery($sql);
+			$resultTableName = $this->execute($sql);
+		}
+		
+		return $resultTableName;
+	}
+	
 	public function getImportTableName(string $tableName) : string
 	{
 		return $tableName."_import";
@@ -235,10 +272,17 @@ class DBReadWriteHandler extends DBReadHandler
 	public function createImportTable(string $tableName) : string
 	{
 		$importTableName = $this->getImportTableName($tableName);
-		$this->execute("CREATE TABLE IF NOT EXISTS `$importTableName` LIKE `$tableName`");
+		$this->createTable($tableName, $importTableName);
 		$this->execute("ALTER TABLE `$importTableName`
 						ADD COLUMN IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` BOOLEAN NOT NULL DEFAULT 0,
-						ADD COLUMN IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci',
+						ADD COLUMN IF NOT EXISTS `".self::EXCLUSION_COLUMN_NAME."` VARCHAR(100) NULL DEFAULT NULL COLLATE 'utf8mb4_unicode_ci'");
+		return $importTableName;
+	}
+	public function createImportTableIndex(string $tableName) : string
+	{
+		$importTableName = $this->getImportTableName($tableName);
+		$this->addIndexForTable($tableName, $importTableName);
+		$this->execute("ALTER TABLE `$importTableName`
 						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`".self::EXCLUDED_COLUMN_NAME."`)");
 		return $importTableName;
 	}

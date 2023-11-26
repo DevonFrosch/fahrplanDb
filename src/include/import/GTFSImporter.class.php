@@ -247,6 +247,8 @@ class GTFSImporter extends ZipImporter
 			}
 
 			$this->importLoadFile($fileOptions);
+			
+			$this->db->createImportTableIndex($fileOptions->getTableName());
 		}
 
 		return $this;
@@ -374,9 +376,14 @@ class GTFSImporter extends ZipImporter
 			$this->log("$count ungültige trips markiert.");
 			$totalCount += $count;
 
-			$this->log("Lösche ungültige stop_times...");
-			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup $runCount", [["trip_id", "trips", "trip_id"], ["stop_id", "stops", "stop_id"]], true);
-			$this->log("$count ungültige stop_times markiert.");
+			$this->log("Lösche ungültige stop_times ohne trip...");
+			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup trips $runCount", [["trip_id", "trips", "trip_id"]]);
+			$this->log("$count ungültige stop_times ohne trip markiert.");
+			$totalCount += $count;
+
+			$this->log("Lösche ungültige stop_times ohne stop...");
+			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup stops $runCount", [["stop_id", "stops", "stop_id"]]);
+			$this->log("$count ungültige stop_times ohne stop markiert.");
 			$totalCount += $count;
 
 			$this->log("Lösche unbenutzte stops...");
