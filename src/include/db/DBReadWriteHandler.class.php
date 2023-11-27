@@ -5,6 +5,7 @@ require_once("ImportTable.class.php");
 
 class DBReadWriteHandler extends DBReadHandler
 {
+	// Wenn das geändert wird, auch in ImportTable.class.php nachschauen!
 	const EXCLUDED_COLUMN_NAME = "importExcluded";
 	const EXCLUSION_COLUMN_NAME = "importExclusion";
 	const DATASET_COLUMNS = ["dataset_name", "import_time", "reference_date", "desc", "license", "start_date", "end_date", "import_state"];
@@ -224,45 +225,42 @@ class DBReadWriteHandler extends DBReadHandler
 		return $rowCount;
 	}
 
-	public function createTable(string $tableName, ?string $alias = null) : string
+	public function createTable(string $tableName, ?string $alias = null) : void
 	{
 		if($alias == null)
 		{
 			$alias = $tableName;
 		}
-		$sql = ImportTable::getCreateTable($tableName, $alias);
-		
-		if($sql == null)
-		{
-			throw new DBException("Keine Definition zum Erzeugen der Tabelle $tableName gefunden.");
-		}
+		$sql = ImportTable::getCreateTable($tableName, $alias, true);
 		
 		$this->execute("DROP TABLE IF EXISTS `$alias`");
-		
-		$this->logQuery($sql);
-		$resultTableName = $this->execute($sql);
-		return $resultTableName;
+		$this->execute($sql);
 	}
-	public function addIndexForTable(string $tableName, ?string $alias = null, bool $import = true) : string
+	public function addIndexForTable(string $tableName, ?string $alias = null, bool $isImport = true) : void
 	{
 		if($alias == null)
 		{
 			$alias = $tableName;
 		}
-		$sqls = ImportTable::getCreateIndex($tableName, $alias, $import);
-		
-		if($sqls == null)
-		{
-			throw new DBException("Keine Definition zum Erzeugen der Indexe für $tableName gefunden.");
-		}
+		$sqls = ImportTable::getCreateIndex($tableName, $alias, $isImport);
 		
 		foreach($sqls as $sql)
 		{
-			$this->logQuery($sql);
-			$resultTableName = $this->execute($sql);
+			$this->logAndExecute($sql);
 		}
+	}
+	public function removeIndexFromTable(string $tableName, ?string $alias = null) : void
+	{
+		if($alias == null)
+		{
+			$alias = $tableName;
+		}
+		$sqls = ImportTable::getDeleteIndex($tableName, $alias);
 		
-		return $resultTableName;
+		foreach($sqls as $sql)
+		{
+			$this->logAndExecute($sql);
+		}
 	}
 	
 	public function getImportTableName(string $tableName) : string
@@ -283,16 +281,18 @@ class DBReadWriteHandler extends DBReadHandler
 		$importTableName = $this->getImportTableName($tableName);
 		$this->addIndexForTable($tableName, $importTableName);
 		
-		$this->logAndExecute("ALTER TABLE `$importTableName`
-						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`".self::EXCLUDED_COLUMN_NAME."`)");
+		/*$this->logAndExecute("ALTER TABLE `$importTableName`
+						ADD KEY IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`)");*/
 		
-		if($tableName == "stop_times")
-		{
-			$this->logAndExecute("ALTER TABLE `$importTableName`
-						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME." + trips` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`, `trip_id`)");
-			$this->logAndExecute("ALTER TABLE `$importTableName`
-						ADD INDEX IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME." + stops` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`, `stop_id`)");
-		}
+		return $importTableName;
+	}
+	public function deleteImportTableIndex(string $tableName) : string
+	{
+		$importTableName = $this->getImportTableName($tableName);
+		$this->removeIndexFromTable($tableName, $importTableName);
+		
+		$this->logAndExecute("ALTER TABLE `$importTableName`
+						DROP KEY IF EXISTS `".self::EXCLUDED_COLUMN_NAME."`");
 		
 		return $importTableName;
 	}
@@ -300,6 +300,10 @@ class DBReadWriteHandler extends DBReadHandler
 	{
 		$rowCount = $this->execute("SHOW TABLE STATUS WHERE NAME LIKE :tableName", [":tableName" => $tableName]);
 		return $rowCount > 0;
+	}
+	public function truncateTable(string $tableName) : void
+	{
+		$this->logAndExecute("TRUNCATE TABLE `$tableName`");
 	}
 
 	public function exclude(int $datasetId, string $tableName, string $reason, string $condition = "1=1", array $params = []) : int
