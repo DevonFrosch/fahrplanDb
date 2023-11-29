@@ -133,14 +133,11 @@ class ImportTable
 				`timepoint` enum('0','1') NOT NULL DEFAULT '1' COMMENT '0 - Times are considered approximate.\r\n1 or empty - Times are considered exact.',
 				PRIMARY KEY (`id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-			"createIndexImport" => [
-				"trips_import" => "ADD KEY IF NOT EXISTS `trips_import` (`dataset_id`,`importExcluded`,`trip_id`)",
-				"stops_import" => "ADD KEY IF NOT EXISTS `stops_import` (`dataset_id`,`importExcluded`,`stop_id`)",
+			"createIndex" => [
+				"unique" => "ADD UNIQUE KEY IF NOT EXISTS `unique` (`dataset_id`,`trip_id`,`stop_sequence`)",
+				"stop_and_time" => "ADD KEY IF NOT EXISTS `stop_and_time` (`dataset_id`,`stop_id`,`departure_time`)",
 			],
 			"createIndexNonImport" => [
-				"unique" => "ADD UNIQUE KEY IF NOT EXISTS `unique` (`dataset_id`,`trip_id`,`stop_sequence`)",
-				"stops" => "ADD KEY IF NOT EXISTS `stops` (`dataset_id`,`stop_id`)",
-				"stop_and_time" => "ADD KEY IF NOT EXISTS `stop_and_time` (`dataset_id`,`stop_id`,`departure_time`)",
 				"departure_time" => "ADD KEY IF NOT EXISTS `departure_time` (`dataset_id`,`departure_time`)",
 				"arrival_time" => "ADD KEY IF NOT EXISTS `arrival_time` (`dataset_id`,`arrival_time`)"
 			]

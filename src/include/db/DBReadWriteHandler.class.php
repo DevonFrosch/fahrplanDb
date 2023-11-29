@@ -281,8 +281,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$importTableName = $this->getImportTableName($tableName);
 		$this->addIndexForTable($tableName, $importTableName);
 		
-		/*$this->logAndExecute("ALTER TABLE `$importTableName`
-						ADD KEY IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`)");*/
+		//$this->logAndExecute("ALTER TABLE `$importTableName` ADD KEY IF NOT EXISTS `".self::EXCLUDED_COLUMN_NAME."` (`dataset_id`, `".self::EXCLUDED_COLUMN_NAME."`)");
 		
 		return $importTableName;
 	}
@@ -291,8 +290,7 @@ class DBReadWriteHandler extends DBReadHandler
 		$importTableName = $this->getImportTableName($tableName);
 		$this->removeIndexFromTable($tableName, $importTableName);
 		
-		$this->logAndExecute("ALTER TABLE `$importTableName`
-						DROP KEY IF EXISTS `".self::EXCLUDED_COLUMN_NAME."`");
+		//$this->logAndExecute("ALTER TABLE `$importTableName` DROP KEY IF EXISTS `".self::EXCLUDED_COLUMN_NAME."`");
 		
 		return $importTableName;
 	}
@@ -321,8 +319,7 @@ class DBReadWriteHandler extends DBReadHandler
 					$condition
 				)";
 
-		$this->logQuery($sql, $params);
-		$rowCount = $this->execute($sql, $params);
+		$rowCount = $this->logAndExecute($sql, $params);
 		return $rowCount;
 	}
 

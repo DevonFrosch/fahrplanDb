@@ -376,7 +376,7 @@ class GTFSImporter extends ZipImporter
 			$this->log("$count ungültige trips markiert.");
 			$totalCount += $count;
 
-			$this->db->deleteImportTableIndex("stop_times");
+			//$this->db->deleteImportTableIndex("stop_times");
 
 			$this->log("Lösche ungültige stop_times ohne trip...");
 			$count = $this->db->cleanupTable("stop_times", $this->datasetId, "stop_times cleanup trips $runCount", [["trip_id", "trips", "trip_id"]]);
@@ -388,8 +388,7 @@ class GTFSImporter extends ZipImporter
 			$this->log("$count ungültige stop_times ohne stop markiert.");
 			$totalCount += $count;
 			
-			$this->db->createImportTableIndex("stop_times");
-			$this->db->deleteImportTableIndex("stop_times");
+			//$this->db->createImportTableIndex("stop_times");
 
 			$this->log("Lösche unbenutzte stops (1)...");
 			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse $runCount", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
@@ -401,8 +400,6 @@ class GTFSImporter extends ZipImporter
 			$count = $this->db->cleanupTable("stops", $this->datasetId, "stops cleanup reverse $runCount", [["stop_id", "stop_times", "stop_id"], ["stop_id", "stops", "parent_station"]]);
 			$this->log("$count unbenutzte stops (2) markiert.");
 			$totalCount += $count;
-
-			$this->db->createImportTableIndex("stop_times");
 
 			$this->log("Lösche unbenutzte trips...");
 			$count = $this->db->cleanupTable("trips", $this->datasetId, "trips cleanup reverse $runCount", [["trip_id", "stop_times", "trip_id"]]);
